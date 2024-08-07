@@ -1,12 +1,12 @@
 import tkinter as tk
 import time
-from flow_free_problem import FlowFreeProblem
+from flow_game.flow_free_problem import FlowFreeProblem
 from level_creator import get_level_dots
-import solver
+from search import solver
 from gui import FlowFreeGUI
 
 
-def get_search_algorithm(search_algorithm_name):
+def get_search_algorithm(search_algorithm_name, heuristic=None):
     if search_algorithm_name == "DFS":
         return solver.depth_first_search
     elif search_algorithm_name == "UCS":

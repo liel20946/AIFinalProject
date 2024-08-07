@@ -1,5 +1,5 @@
 from copy import deepcopy
-from flow_free.move import Move
+from flow_game.move import Move
 
 EMPTY_CELL = "black"
 

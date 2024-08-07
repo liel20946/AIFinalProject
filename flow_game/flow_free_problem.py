@@ -1,4 +1,4 @@
-from flow_free.board import Board
+from flow_game.board import Board
 
 
 class FlowFreeProblem:

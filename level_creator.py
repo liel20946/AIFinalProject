@@ -1,4 +1,4 @@
-from dot import Dot
+from flow_game.dot import Dot
 
 
 def get_level_dots(grid_size, difficulty):
