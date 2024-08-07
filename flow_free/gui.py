@@ -10,7 +10,7 @@ class FlowFreeGUI:
         self.cells = [[None for _ in range(board_width)] for _ in
                       range(board_height)]
         self.moves = 0
-        self.best_score = 5  # Example best score
+        self.search_time = 0.0  # To store the search algorithm time
         self.pipe_filled = 0.35  # Example pipe filled percentage
         self.setup_gui()
         self.center_window()
@@ -25,10 +25,10 @@ class FlowFreeGUI:
                                     font=("Helvetica", 16), fg="orange")
         self.moves_label.pack(side=tk.LEFT, padx=20)
 
-        self.best_score_label = tk.Label(label_frame,
-                                         text=f"best: {self.best_score}",
-                                         font=("Helvetica", 16), fg="orange")
-        self.best_score_label.pack(side=tk.LEFT, padx=20)
+        self.search_time_label = tk.Label(label_frame,
+                                          text=f"time: {self.search_time:.2f} s",
+                                          font=("Helvetica", 16), fg="orange")
+        self.search_time_label.pack(side=tk.LEFT, padx=20)
 
         self.pipe_filled_label = tk.Label(label_frame,
                                           text=f"pipe: {int(self.pipe_filled * 100)}%",
@@ -77,9 +77,14 @@ class FlowFreeGUI:
 
     def update_labels(self):
         self.moves_label.config(text=f"moves: {self.moves}")
+        self.search_time_label.config(text=f"time: {self.search_time:.2f} s")
 
     def increment_moves(self):
         self.moves += 1
+        self.update_labels()
+
+    def set_search_time(self, search_time):
+        self.search_time = search_time
         self.update_labels()
 
     def center_window(self):
