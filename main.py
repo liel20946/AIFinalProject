@@ -4,23 +4,23 @@ from flow_game.flow_free_problem import FlowFreeProblem
 from level_creator import get_level_dots
 from search import solver
 from gui import FlowFreeGUI
+import search.heuristics as heuristics
 
 
-def get_search_algorithm(search_algorithm_name):
+def run_search_algorithm(search_algorithm_name, problem):
     if search_algorithm_name == "DFS":
-        return solver.depth_first_search
+        return solver.depth_first_search(problem)
     elif search_algorithm_name == "UCS":
-        return solver.uniform_cost_search
+        return solver.uniform_cost_search(problem)
     elif search_algorithm_name == "A*":
-        return solver.a_star_search
+        return solver.a_star_search(problem, heuristics.combined_heuristic)
     elif search_algorithm_name == "BFS":
-        return solver.breadth_first_search
+        return solver.breadth_first_search(problem)
 
 
 def start_search(problem):
-    search_algorithm = get_search_algorithm("DFS")
     start_time = time.time()
-    actions = search_algorithm(problem)
+    actions = run_search_algorithm("A*", problem)
     elapsed_time = time.time() - start_time
     return actions, elapsed_time
 
@@ -37,7 +37,7 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
 
 
 def main():
-    dots_list, grid_size = get_level_dots(3, "easy")
+    dots_list, grid_size = get_level_dots(1, "hard")
     problem = FlowFreeProblem(grid_size, dots_list)
 
     # Execute the search algorithm

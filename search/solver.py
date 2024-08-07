@@ -66,7 +66,7 @@ def uniform_cost_search(problem):
     return []
 
 
-def null_heuristic(state, problem=None):
+def null_heuristic(state):
     """
     A heuristic function estimates the cost from the current state to the nearest
     goal in the provided SearchProblem.  This heuristic is trivial.
@@ -90,7 +90,7 @@ def a_star_search(problem, heuristic=null_heuristic):
             for successor, action, step_cost in problem.get_successors(state):
                 if successor not in visited:
                     cost = problem.get_cost_of_actions(
-                        actions + [action]) + heuristic(successor, problem)
+                        actions + [action]) + heuristic(successor)
                     fringe.push(Pair(successor, actions + [action]), cost)
     return []
 
