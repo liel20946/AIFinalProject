@@ -7,8 +7,8 @@ class FlowFreeProblem:
     This problem is implemented for you. You should NOT change it!
     """
 
-    def __init__(self, board_w, board_h, dots_list):
-        self.board = Board(board_w, board_h, dots_list)
+    def __init__(self, board_size, dots_list):
+        self.board = Board(board_size, dots_list)
         self.expanded = 0
 
     def get_start_state(self):

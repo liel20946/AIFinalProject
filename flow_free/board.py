@@ -5,9 +5,8 @@ EMPTY_CELL = "black"
 
 
 class Board:
-    def __init__(self, board_w, board_h, dots_list):
-        self.board_w = board_w
-        self.board_h = board_h
+    def __init__(self, board_size, dots_list):
+        self.board_size = board_size
         self.dots_list = dots_list
         self.end_dots = {dot.get_color(): dot for dot in dots_list if
                          dot.get_is_goal()}
@@ -24,8 +23,8 @@ class Board:
         return paths
 
     def initialize_board(self):
-        board = [[EMPTY_CELL for i in range(self.board_w)] for j in range(
-            self.board_h)]
+        board = [[EMPTY_CELL for i in range(self.board_size)] for j in range(
+            self.board_size)]
         for dot in self.dots_list:
             board[dot.get_x()][dot.get_y()] = dot.get_color()
         return board
@@ -43,14 +42,14 @@ class Board:
         return move_list
 
     def is_coord_valid(self, x, y):
-        return 0 <= x < self.board_w and 0 <= y < self.board_h
+        return 0 <= x < self.board_size and 0 <= y < self.board_size
 
     def is_move_valid(self, x, y, color):
         return (self.game_board[x][y] == EMPTY_CELL or (x, y) == (
             self.end_dots[color].get_x(), self.end_dots[color].get_y()))
 
     def __copy__(self):
-        new_board = Board(self.board_w, self.board_h, self.dots_list)
+        new_board = Board(self.board_size, self.dots_list)
         new_board.paths = deepcopy(self.paths)
         new_board.game_board = deepcopy(self.game_board)
         return new_board
@@ -69,8 +68,8 @@ class Board:
         return len(self.paths) == 0
 
     def __eq__(self, other):
-        for i in range(self.board_h):
-            for j in range(self.board_w):
+        for i in range(self.board_size):
+            for j in range(self.board_size):
                 if self.game_board[i][j] != other.game_board[i][j]:
                     return False
         return self.paths == other.paths
@@ -80,8 +79,8 @@ class Board:
 
     def __str__(self):
         out_str = []
-        for row in range(self.board_h):
-            for col in range(self.board_w):
+        for row in range(self.board_size):
+            for col in range(self.board_size):
                 out_str.append(self.game_board[row][col])
                 out_str.append(' ')
             out_str.append('\n')

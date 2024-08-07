@@ -1,7 +1,7 @@
 import tkinter as tk
 import time
 from flow_free_problem import FlowFreeProblem
-from dot import Dot
+from level_creator import get_level_dots
 import solver
 from gui import FlowFreeGUI
 
@@ -19,7 +19,7 @@ def get_search_algorithm(search_algorithm_name):
 
 def start_search(problem):
     start_time = time.time()
-    search_algorithm = get_search_algorithm("BFS")
+    search_algorithm = get_search_algorithm("DFS")
     actions = search_algorithm(problem)
     elapsed_time = time.time() - start_time
     return actions, elapsed_time
@@ -32,26 +32,21 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
         gui.update_board(curr_state.game_board)
         gui.increment_moves()  # Increment moves after the delay
         gui.root.after(500, lambda: execute_actions_with_delay(gui, curr_state, actions, index + 1))
+    else:
+        gui.display_win_message()  # Display "You Win" message when done
 
 
 def main():
-    dots_list = [
-        Dot(0, 0, 'red', False), Dot(4, 1, 'red', True),  # Red pair
-        Dot(3, 1, 'green', False), Dot(0, 2, 'green', True),  # Green pair
-        Dot(1, 2, 'blue', False), Dot(4, 2, 'blue', True),  # Blue pair
-        Dot(3, 3, 'yellow', False), Dot(0, 4, 'yellow', True),  # Yellow pair
-        Dot(1, 4, 'orange', False), Dot(4, 3, 'orange', True)  # Orange pair
-    ]
-    problem = FlowFreeProblem(5, 5, dots_list)
+    dots_list = get_level_dots(5, "easy")
+    problem = FlowFreeProblem(5, dots_list)
 
     # Execute the search algorithm
     actions, elapsed_time = start_search(problem)
 
     # Create Tkinter root and GUI only after the search algorithm is done
     root = tk.Tk()
-    board_width = problem.board.board_w
-    board_height = problem.board.board_h
-    gui = FlowFreeGUI(root, board_width, board_height)
+    board_size = problem.board.board_size
+    gui = FlowFreeGUI(root, board_size, board_size)
 
     # Set the search time in the GUI
     gui.set_search_time(elapsed_time)

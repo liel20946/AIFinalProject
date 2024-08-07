@@ -18,8 +18,17 @@ class FlowFreeGUI:
     def setup_gui(self):
         self.root.title("Flow Free")
 
+        # Create a frame for the "You Win" message
+        self.win_frame = tk.Frame(self.root)
+        self.win_frame.grid(row=0, column=0, columnspan=self.board_width)
+
+        self.win_label = tk.Label(self.win_frame, text="",
+                                  font=("Helvetica", 20), fg="green")
+        self.win_label.pack()
+
+        # Create a frame for the labels
         label_frame = tk.Frame(self.root)
-        label_frame.grid(row=0, column=0, columnspan=self.board_width)
+        label_frame.grid(row=1, column=0, columnspan=self.board_width)
 
         self.moves_label = tk.Label(label_frame, text=f"moves: {self.moves}",
                                     font=("Helvetica", 16), fg="orange")
@@ -41,7 +50,8 @@ class FlowFreeGUI:
                                    height=self.cell_size, bg='black',
                                    highlightthickness=0.5,
                                    highlightbackground='#808080')
-                canvas.grid(row=i + 1, column=j)
+                canvas.grid(row=i + 2,
+                            column=j)  # Adjusted row to make space for labels
                 self.cells[i][j] = canvas
 
     def update_board(self, game_board):
@@ -86,6 +96,9 @@ class FlowFreeGUI:
     def set_search_time(self, search_time):
         self.search_time = search_time
         self.update_labels()
+
+    def display_win_message(self):
+        self.win_label.config(text="You Win!")
 
     def center_window(self):
         self.root.update_idletasks()
