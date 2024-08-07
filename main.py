@@ -6,7 +6,7 @@ from search import solver
 from gui import FlowFreeGUI
 
 
-def get_search_algorithm(search_algorithm_name, heuristic=None):
+def get_search_algorithm(search_algorithm_name):
     if search_algorithm_name == "DFS":
         return solver.depth_first_search
     elif search_algorithm_name == "UCS":
@@ -18,8 +18,8 @@ def get_search_algorithm(search_algorithm_name, heuristic=None):
 
 
 def start_search(problem):
-    start_time = time.time()
     search_algorithm = get_search_algorithm("DFS")
+    start_time = time.time()
     actions = search_algorithm(problem)
     elapsed_time = time.time() - start_time
     return actions, elapsed_time
@@ -37,8 +37,8 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
 
 
 def main():
-    dots_list = get_level_dots(5, "easy")
-    problem = FlowFreeProblem(5, dots_list)
+    dots_list, grid_size = get_level_dots(3, "easy")
+    problem = FlowFreeProblem(grid_size, dots_list)
 
     # Execute the search algorithm
     actions, elapsed_time = start_search(problem)
@@ -51,10 +51,14 @@ def main():
     # Set the search time in the GUI
     gui.set_search_time(elapsed_time)
 
-    # Display the initial state and start executing actions with a delay
-    curr_state = problem.get_start_state()
-    gui.update_board(curr_state.game_board)
-    root.after(500, execute_actions_with_delay, gui, curr_state, actions)
+    if actions:
+        # Display the initial state and start executing actions with a delay
+        curr_state = problem.get_start_state()
+        gui.update_board(curr_state.game_board)
+        root.after(500, execute_actions_with_delay, gui, curr_state, actions)
+    else:
+        gui.display_lost_message()  # Display "You Lost" message if no actions
+
     root.mainloop()
 
 

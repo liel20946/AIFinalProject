@@ -18,7 +18,7 @@ class FlowFreeGUI:
     def setup_gui(self):
         self.root.title("Flow Free")
 
-        # Create a frame for the "You Win" message
+        # Create a frame for the "You Win/Lost" message
         self.win_frame = tk.Frame(self.root)
         self.win_frame.grid(row=0, column=0, columnspan=self.board_width)
 
@@ -98,7 +98,10 @@ class FlowFreeGUI:
         self.update_labels()
 
     def display_win_message(self):
-        self.win_label.config(text="You Win!")
+        self.win_label.config(text="You Win!", fg="green")
+
+    def display_lost_message(self):
+        self.win_label.config(text="You Lost!", fg="red")
 
     def center_window(self):
         self.root.update_idletasks()
