@@ -1,6 +1,8 @@
 from copy import deepcopy
 from flow_free.move import Move
 
+EMPTY_CELL = "black"
+
 
 class Board:
     def __init__(self, board_w, board_h, dots_list):
@@ -22,7 +24,7 @@ class Board:
         return paths
 
     def initialize_board(self):
-        board = [["E" for i in range(self.board_w)] for j in range(
+        board = [[EMPTY_CELL for i in range(self.board_w)] for j in range(
             self.board_h)]
         for dot in self.dots_list:
             board[dot.get_x()][dot.get_y()] = dot.get_color()
@@ -44,7 +46,7 @@ class Board:
         return 0 <= x < self.board_w and 0 <= y < self.board_h
 
     def is_move_valid(self, x, y, color):
-        return (self.game_board[x][y] == "E" or (x, y) == (
+        return (self.game_board[x][y] == EMPTY_CELL or (x, y) == (
             self.end_dots[color].get_x(), self.end_dots[color].get_y()))
 
     def __copy__(self):
