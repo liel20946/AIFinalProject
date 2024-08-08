@@ -116,7 +116,7 @@ def manhattanDistance(xy1, xy2):
 """
   Data structures and functions useful for various course projects
 
-  The search project should not need anything below this line.
+  The solvers project should not need anything below this line.
 """
 
 

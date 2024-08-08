@@ -97,4 +97,13 @@ def get_level_dots(set_number, difficulty):
                 Dot(0, 0, 'light blue', False), Dot(2, 0, 'light blue', True),
             ], grid_size
 
+    elif difficulty == "simple":
+        if set_number == 2:
+            grid_size = 4
+            return [
+                Dot(0, 0, 'red', False), Dot(3, 0, 'red', True),
+                Dot(1, 1, 'green', False), Dot(3, 1, 'green', True)
+            ], grid_size
+
+
 

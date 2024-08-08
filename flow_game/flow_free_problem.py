@@ -3,7 +3,7 @@ from flow_game.board import Board
 
 class FlowFreeProblem:
     """
-    A one-player Blokus game as a search problem.
+    A one-player Blokus game as a solvers problem.
     This problem is implemented for you. You should NOT change it!
     """
 
@@ -13,7 +13,7 @@ class FlowFreeProblem:
 
     def get_start_state(self):
         """
-        Returns the start state for the search problem
+        Returns the start state for the solvers problem
         """
         return self.board
 
@@ -34,7 +34,7 @@ class FlowFreeProblem:
         required to get there, and 'stepCost' is the incremental
         cost of expanding to that successor
         """
-        # Note that for the search problem, there is only one player - #0
+        # Note that for the solvers problem, there is only one player - #0
         self.expanded = self.expanded + 1
         return [(state.do_move(move), move, 1) for move in (
             state.get_legal_moves())]

@@ -8,7 +8,7 @@ class FlowFreeGUI:
         self.cell_size = 100
         self.cells = [[None for _ in range(board_width)] for _ in range(board_height)]
         self.expanded_nodes = 0
-        self.search_time = 0.0  # To store the search algorithm time
+        self.search_time = 0.0  # To store the solvers algorithm time
         self.algorithm_name = ""  # To store the algorithm name
         self.setup_gui()
         self.center_window()

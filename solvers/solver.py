@@ -1,16 +1,16 @@
-from search import util
+from solvers import util
 
 
 # DFS
 def depth_first_search(problem):
     """
-    Search the deepest nodes in the search tree first.
+    Search the deepest nodes in the solvers tree first.
 
-    Your search algorithm needs to return a list of actions that reaches
-    the goal. Make sure to implement a graph search algorithm.
+    Your solvers algorithm needs to return a list of actions that reaches
+    the goal. Make sure to implement a graph solvers algorithm.
 
     To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
+    understand the solvers problem that is being passed in:
 
     print("Start:", problem.getStartState())
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
@@ -22,14 +22,14 @@ def depth_first_search(problem):
 # BFS
 def breadth_first_search(problem):
     """
-    Search the shallowest nodes in the search tree first.
+    Search the shallowest nodes in the solvers tree first.
     """
     return general_search(problem, util.Queue())
 
 
 def general_search(problem, fringe):
     """
-    general search algorithm, takes a problem and a fringe and returns a list of actions that reaches.
+    general solvers algorithm, takes a problem and a fringe and returns a list of actions that reaches.
     """
     visited = set()
     fringe.push((problem.get_start_state(), []))
@@ -94,7 +94,7 @@ def a_star_search(problem, heuristic=null_heuristic):
                     fringe.push(Pair(successor, actions + [action]), cost)
     return []
 
-    # class for the search algorithms
+    # class for the solvers algorithms
 
 
 class Pair:
