@@ -3,11 +3,13 @@ from flow_game.move import Move
 
 EMPTY_CELL = "black"
 
+
 class Board:
     def __init__(self, board_size, dots_list):
         self.board_size = board_size
         self.dots_list = dots_list
-        self.end_dots = {dot.get_color(): dot for dot in dots_list if dot.get_is_goal()}
+        self.end_dots = {dot.get_color(): dot for dot in dots_list if
+                         dot.get_is_goal()}
         self.paths = self.initialize_paths()
         self.game_board = self.initialize_board()
 
@@ -19,7 +21,8 @@ class Board:
         return paths
 
     def initialize_board(self):
-        board = [[EMPTY_CELL for i in range(self.board_size)] for j in range(self.board_size)]
+        board = [[EMPTY_CELL for i in range(self.board_size)] for j in
+                 range(self.board_size)]
         for dot in self.dots_list:
             board[dot.get_x()][dot.get_y()] = dot.get_color()
         return board
@@ -31,7 +34,8 @@ class Board:
             x, y = self.paths[color]
             for direction in directions:
                 dx, dy = direction
-                if self.is_coord_valid(x + dx, y + dy) and self.is_move_valid(x + dx, y + dy, color):
+                if self.is_coord_valid(x + dx, y + dy) and self.is_move_valid(
+                        x + dx, y + dy, color):
                     move_list.append(Move(x + dx, y + dy, color))
         return move_list
 
@@ -39,14 +43,16 @@ class Board:
         return 0 <= x < self.board_size and 0 <= y < self.board_size
 
     def is_move_valid(self, x, y, color):
-        return self.game_board[x][y] == EMPTY_CELL or (x, y) == (self.end_dots[color].get_x(), self.end_dots[color].get_y())
+        return self.game_board[x][y] == EMPTY_CELL or (x, y) == (
+            self.end_dots[color].get_x(), self.end_dots[color].get_y())
 
     def __copy__(self):
         new_board = Board.__new__(Board)
         new_board.board_size = self.board_size
         new_board.dots_list = self.dots_list
         new_board.end_dots = self.end_dots
-        new_board.paths = {color: (x, y) for color, (x, y) in self.paths.items()}
+        new_board.paths = {color: (x, y) for color, (x, y) in
+                           self.paths.items()}
         new_board.game_board = [row[:] for row in self.game_board]
         return new_board
 
@@ -68,7 +74,7 @@ class Board:
             for j in range(self.board_size):
                 if self.game_board[i][j] != other.game_board[i][j]:
                     return False
-        return self.paths == other.paths
+        return True
 
     def __hash__(self):
         return hash(str(self.game_board))

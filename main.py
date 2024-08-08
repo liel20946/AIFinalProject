@@ -18,9 +18,9 @@ def run_search_algorithm(search_algorithm_name, problem):
         return solver.breadth_first_search(problem)
 
 
-def start_search(problem):
+def start_search(problem, algorithm_name):
     start_time = time.time()
-    actions = run_search_algorithm("A*", problem)
+    actions = run_search_algorithm(algorithm_name, problem)
     elapsed_time = time.time() - start_time
     return actions, elapsed_time
 
@@ -30,26 +30,28 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
         action = actions[index]
         curr_state = curr_state.do_move(action)
         gui.update_board(curr_state.game_board)
-        gui.increment_moves()  # Increment moves after the delay
         gui.root.after(500, lambda: execute_actions_with_delay(gui, curr_state, actions, index + 1))
     else:
         gui.display_win_message()  # Display "You Win" message when done
 
 
 def main():
-    dots_list, grid_size = get_level_dots(1, "hard")
+    algorithm_name = "A*"
+    dots_list, grid_size = get_level_dots(1, "medium")
     problem = FlowFreeProblem(grid_size, dots_list)
 
     # Execute the search algorithm
-    actions, elapsed_time = start_search(problem)
+    actions, elapsed_time = start_search(problem, algorithm_name)
 
     # Create Tkinter root and GUI only after the search algorithm is done
     root = tk.Tk()
     board_size = problem.board.board_size
     gui = FlowFreeGUI(root, board_size, board_size)
 
-    # Set the search time in the GUI
+    # Set the search time, expanded nodes, and algorithm name in the GUI
     gui.set_search_time(elapsed_time)
+    gui.set_expanded_nodes(problem.expanded)
+    gui.set_algorithm_name(algorithm_name)
 
     if actions:
         # Display the initial state and start executing actions with a delay

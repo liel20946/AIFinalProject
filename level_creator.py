@@ -29,7 +29,7 @@ def get_level_dots(set_number, difficulty):
                 Dot(0, 4, 'orange', False), Dot(3, 0, 'orange', True)
             ], grid_size
 
-        elif set_number == -1:
+        elif set_number == -1:  # unsolvable
             return [
                 Dot(0, 0, 'red', False), Dot(4, 1, 'red', True),
                 Dot(3, 1, 'green', False), Dot(0, 2, 'green', True),
@@ -46,7 +46,13 @@ def get_level_dots(set_number, difficulty):
             ], grid_size
         elif set_number == 2:
             return [
-                # Add dots for hard level 2
+                Dot(1, 0, 'red', False), Dot(5, 1, 'red', True),
+                Dot(0, 2, 'green', False), Dot(0, 5, 'green', True),
+                Dot(3, 4, 'blue', False), Dot(4, 5, 'blue', True),
+                Dot(1, 2, 'yellow', False), Dot(3, 5, 'yellow', True),
+                Dot(3, 1, 'orange', False), Dot(5, 2, 'orange', True),
+                Dot(3, 2, 'light blue', False), Dot(5, 5, 'light blue', True),
+                Dot(0, 0, 'pink', False), Dot(2, 4, 'pink', True),
             ], grid_size
         elif set_number == 3:
             return [
