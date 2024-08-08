@@ -56,11 +56,25 @@ class Board:
         new_board.game_board = [row[:] for row in self.game_board]
         return new_board
 
+    def finished_move(self, move, end_dot):
+        return (move.get_x(), move.get_y()) == (end_dot.get_x(),
+                                                end_dot.get_y())
+
+    def next_step_finish(self, move, end_dot):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        x, y, color = move.get_x(), move.get_y(), move.get_color()
+        for direction in directions:
+            dx, dy = direction
+            if (x + dx, y + dy) == (end_dot.get_x(), end_dot.get_y()):
+                return True
+        return False
+
     def do_move(self, move):
         new_board = self.__copy__()
         new_board.game_board[move.get_x()][move.get_y()] = move.get_color()
         end_dot = new_board.end_dots[move.get_color()]
-        if (move.get_x(), move.get_y()) == (end_dot.get_x(), end_dot.get_y()):
+        if self.next_step_finish(move, end_dot) or self.finished_move(move,
+                                                                      end_dot):
             del new_board.paths[move.get_color()]
         else:
             new_board.paths[move.get_color()] = (move.get_x(), move.get_y())

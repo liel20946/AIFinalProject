@@ -42,7 +42,11 @@ def get_level_dots(set_number, difficulty):
         grid_size = 6
         if set_number == 1:
             return [
-                # Add dots for hard level 1
+                Dot(4, 0, 'red', False), Dot(2, 2, 'red', True),
+                Dot(3, 0, 'green', False), Dot(2, 5, 'green', True),
+                Dot(3, 1, 'blue', False), Dot(1, 4, 'blue', True),
+                Dot(2, 3, 'yellow', False), Dot(4, 4, 'yellow', True),
+                Dot(2, 4, 'orange', False), Dot(5, 0, 'orange', True)
             ], grid_size
         elif set_number == 2:
             return [
@@ -56,7 +60,11 @@ def get_level_dots(set_number, difficulty):
             ], grid_size
         elif set_number == 3:
             return [
-                # Add dots for hard level 3
+                Dot(0, 1, 'red', False), Dot(4, 1, 'red', True),
+                Dot(5, 1, 'green', False), Dot(5, 5, 'green', True),
+                Dot(0, 0, 'blue', False), Dot(5, 0, 'blue', True),
+                Dot(1, 3, 'yellow', False), Dot(5, 4, 'yellow', True),
+                Dot(1, 4, 'orange', False), Dot(4, 4, 'orange', True)
             ], grid_size
 
     elif difficulty == "hard":
@@ -81,6 +89,12 @@ def get_level_dots(set_number, difficulty):
             ], grid_size
         elif set_number == 3:
             return [
-                # Add dots for medium level 3
+                Dot(0, 1, 'red', False), Dot(3, 3, 'red', True),
+                Dot(0, 2, 'green', False), Dot(3, 0, 'green', True),
+                Dot(3, 1, 'blue', False), Dot(5, 5, 'blue', True),
+                Dot(1, 4, 'yellow', False), Dot(2, 1, 'yellow', True),
+                Dot(1, 5, 'orange', False), Dot(4, 5, 'orange', True),
+                Dot(0, 0, 'light blue', False), Dot(2, 0, 'light blue', True),
             ], grid_size
+
 
