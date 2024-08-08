@@ -39,6 +39,17 @@ class Board:
                     move_list.append(Move(x + dx, y + dy, color))
         return move_list
 
+    def get_legal_moves_for_specific_color(self, color):
+        move_list = []
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        x, y = self.paths[color]
+        for direction in directions:
+            dx, dy = direction
+            if self.is_coord_valid(x + dx, y + dy) and self.is_move_valid(
+                    x + dx, y + dy, color):
+                move_list.append(Move(x + dx, y + dy, color))
+        return move_list
+
     def is_coord_valid(self, x, y):
         return 0 <= x < self.board_size and 0 <= y < self.board_size
 
