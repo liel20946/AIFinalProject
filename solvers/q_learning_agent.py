@@ -32,13 +32,29 @@ class QLearningAgent:
         return random.choice(best_actions)
 
     def choose_action(self, state):
-        return random.choice(state.get_legal_moves())
-        # if random.uniform(0, 1) < self.epsilon: # TODO: Implement epsilon-greedy policy
-        #     return random.choice(state.get_legal_moves())
-        # else:
-        #     return self.get_best_action(state)
+        # return random.choice(state.get_legal_moves())
+        if random.uniform(0, 1) < self.epsilon:
+            return random.choice(state.get_legal_moves())
+        else:
+            return self.get_best_action(state)
+
+    def blocked_state(self, state):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        for dot in state.paths:
+            x, y = state.paths[dot]
+            dead_end = True
+            for direction in directions:
+                dx, dy = direction
+                if state.is_coord_valid(x + dx, y + dy) and \
+                        state.game_board[x + dx][y + dy] == "black":
+                    dead_end = False
+                    break
+            if dead_end:
+                return True
+        return False
 
     def train(self, episodes, environment):
+        win_counter = 0
         for episode in range(episodes):
             print(f"Episode {episode + 1}")
             state = environment.reset()
@@ -48,6 +64,11 @@ class QLearningAgent:
                 next_state, reward, done = environment.step(action)
                 self.update_q_value(state, action, reward, next_state)
                 state = next_state
+                if self.blocked_state(state):
+                    done = True
+            if state.is_goal_state():
+                win_counter += 1
+                print("won")
 
     def solve(self, state, environment):
         actions = []

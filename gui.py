@@ -97,3 +97,23 @@ class FlowFreeGUI:
         position_right = int(screen_width / 2 - window_width / 2)
         position_down = int(screen_height / 2 - window_height / 2)
         self.root.geometry(f'{window_width}x{window_height}+{position_right}+{position_down}')
+
+    def display_starting_dots(self, dots_list):
+        # Clear the board
+        for i in range(self.board_height):
+            for j in range(self.board_width):
+                self.cells[i][j].delete("all")
+                self.cells[i][j].create_rectangle(0, 0, self.cell_size,
+                                                  self.cell_size, fill="black")
+
+        # Draw the dots on the board
+        for dot in dots_list:
+            i = dot.get_x()
+            j = dot.get_y()
+            color = dot.get_color()
+            self.cells[i][j].create_oval(self.cell_size // 5,
+                                         self.cell_size // 5,
+                                         self.cell_size * 4 // 5,
+                                         self.cell_size * 4 // 5, fill=color,
+                                         outline="")
+

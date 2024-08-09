@@ -1,4 +1,3 @@
-from copy import deepcopy
 from flow_game.move import Move
 
 EMPTY_CELL = "black"
@@ -11,7 +10,43 @@ class Board:
         self.end_dots = {dot.get_color(): dot for dot in dots_list if
                          dot.get_is_goal()}
         self.paths = self.initialize_paths()
+        self.remaining_colors = list(self.paths.keys())
+        self.current_color = None
         self.game_board = self.initialize_board()
+        self.choose_next_color()
+        self.current_cost = 0
+
+    def get_cost(self):
+        return self.current_cost
+
+    def remove_color(self, color):
+        del self.paths[color]
+        self.remaining_colors.remove(color)
+        self.choose_next_color()
+
+    def choose_next_color(self):
+        # choose the color with least possible moves
+        next_color, min_moves = None, float('inf')
+        for color in self.remaining_colors:
+            moves = self.get_number_of_moves_for_color(color)
+            if moves < min_moves:
+                min_moves = moves
+                next_color = color
+        self.current_color = next_color
+
+    def get_number_of_moves_for_color(self, color):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        x, y = self.paths[color]
+        moves = 0
+        for direction in directions:
+            dx, dy = direction
+            if self.is_coord_valid(x + dx, y + dy) and self.is_move_valid(
+                    x + dx, y + dy, color):
+                moves += 1
+        return moves
+
+    def get_end_dots(self):
+        return self.end_dots
 
     def initialize_paths(self):
         paths = {}
@@ -27,28 +62,51 @@ class Board:
             board[dot.get_x()][dot.get_y()] = dot.get_color()
         return board
 
-    def get_legal_moves(self):
-        move_list = []
-        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        for color in self.paths.keys():
-            x, y = self.paths[color]
-            for direction in directions:
-                dx, dy = direction
-                if self.is_coord_valid(x + dx, y + dy) and self.is_move_valid(
-                        x + dx, y + dy, color):
-                    move_list.append(Move(x + dx, y + dy, color))
-        return move_list
+    def end_point_valid_move(self, x, y, color):
+        return self.game_board[x][y] == EMPTY_CELL or (x, y) == self.paths[
+            color]
 
-    def get_legal_moves_for_specific_color(self, color):
-        move_list = []
+    def is_end_point_stranded(self, color):
+        x, y = self.end_dots[color].get_x(), self.end_dots[color].get_y()
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        x, y = self.paths[color]
+        for direction in directions:
+            dx, dy = direction
+            if self.is_coord_valid(x + dx,
+                                   y + dy) and self.end_point_valid_move(
+                x + dx, y + dy, color):
+                return False
+        return True
+
+    def get_legal_move_for_specific_cell(self, coord):
+        move_list = []
+        x, y = coord
+        cell_color = self.game_board[x][y]
+        if cell_color == EMPTY_CELL:
+            return move_list
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         for direction in directions:
             dx, dy = direction
             if self.is_coord_valid(x + dx, y + dy) and self.is_move_valid(
-                    x + dx, y + dy, color):
-                move_list.append(Move(x + dx, y + dy, color))
+                    x + dx, y + dy, cell_color):
+                move_list.append(
+                    Move(x + dx, y + dy, cell_color))
         return move_list
+
+    def check_stranded_colors(self):
+        # return true if there is any color that has no possible moves
+        for color in self.remaining_colors:
+            moves_for_flow = self.get_legal_move_for_specific_cell(
+                self.paths[color])
+            end_point_stranded = self.is_end_point_stranded(color)
+            if end_point_stranded or not moves_for_flow:
+                return True
+        return False
+
+    def get_legal_moves(self):
+        if (not self.current_color) or (self.check_stranded_colors()):
+            return []
+        return self.get_legal_move_for_specific_cell(
+            self.paths[self.current_color])
 
     def is_coord_valid(self, x, y):
         return 0 <= x < self.board_size and 0 <= y < self.board_size
@@ -64,51 +122,45 @@ class Board:
         new_board.end_dots = self.end_dots
         new_board.paths = {color: (x, y) for color, (x, y) in
                            self.paths.items()}
+        new_board.remaining_colors = [color for color in self.remaining_colors]
         new_board.game_board = [row[:] for row in self.game_board]
+        new_board.current_color = self.current_color
+        new_board.current_cost = self.current_cost
         return new_board
 
     def finished_move(self, move, end_dot):
         return (move.get_x(), move.get_y()) == (end_dot.get_x(),
                                                 end_dot.get_y())
 
-    def next_step_finish(self, move, end_dot):
-        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        x, y, color = move.get_x(), move.get_y(), move.get_color()
-        for direction in directions:
-            dx, dy = direction
-            if (x + dx, y + dy) == (end_dot.get_x(), end_dot.get_y()):
-                return True
-        return False
+    def is_forced_move(self, move):
+        return (len(self.get_legal_moves()) == 1 and self.get_legal_moves()[
+            0] == move)
 
     def do_move(self, move):
         new_board = self.__copy__()
         new_board.game_board[move.get_x()][move.get_y()] = move.get_color()
         end_dot = new_board.end_dots[move.get_color()]
-        if self.next_step_finish(move, end_dot) or self.finished_move(move,
-                                                                      end_dot):
-            del new_board.paths[move.get_color()]
+        added_cost = 1
+        if self.finished_move(move, end_dot):
+            new_board.remove_color(move.get_color())
+            added_cost = 0
         else:
             new_board.paths[move.get_color()] = (move.get_x(), move.get_y())
+        if self.is_forced_move(move):
+            added_cost = 0
+        new_board.current_cost += added_cost
         return new_board
 
     def is_goal_state(self):
-        return len(self.paths) == 0
+        return len(self.remaining_colors) == 0
 
     def __eq__(self, other):
         for i in range(self.board_size):
             for j in range(self.board_size):
                 if self.game_board[i][j] != other.game_board[i][j]:
                     return False
-        return True
+        return self.remaining_colors == other.remaining_colors
 
     def __hash__(self):
-        return hash(str(self.game_board))
-
-    def __str__(self):
-        out_str = []
-        for row in range(self.board_size):
-            for col in range(self.board_size):
-                out_str.append(self.game_board[row][col])
-                out_str.append(' ')
-            out_str.append('\n')
-        return ''.join(out_str)
+        # hash both board and remaining colors
+        return hash((str(self.game_board), str(self.remaining_colors)))
