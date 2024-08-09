@@ -25,9 +25,23 @@ class Board:
         self.choose_next_color()
 
     def choose_next_color(self):
-        # choose the color with least possible moves
-        next_color, min_moves = None, float('inf')
+        # first prioritize colors that the current flow cell is adjacent to a
+        # wall, then choose the color with the least possible moves
+
+        # prioritize colors that the current flow cell is adjacent to a wall
+        adjacent_to_wall = []
         for color in self.remaining_colors:
+            x, y = self.paths[color]
+            directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            for direction in directions:
+                dx, dy = direction
+                if not self.is_coord_valid(x + dx, y + dy):
+                    adjacent_to_wall.append(color)
+                    break
+        next_colors_lst = adjacent_to_wall if adjacent_to_wall else self.remaining_colors
+
+        next_color, min_moves = None, float('inf')
+        for color in next_colors_lst:
             moves = self.get_number_of_moves_for_color(color)
             if moves < min_moves:
                 min_moves = moves

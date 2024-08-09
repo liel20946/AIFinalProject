@@ -50,7 +50,7 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
 
 def solve_with_search():
     algorithm_name = "A*"
-    dots_list, grid_size = get_level_dots(1, "very hard")
+    dots_list, grid_size = get_level_dots(2, "extreme")
     problem = FlowFreeProblem(grid_size, dots_list)
     # display_initial_board(problem)
 
