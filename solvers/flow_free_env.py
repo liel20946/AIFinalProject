@@ -3,9 +3,6 @@ class FlowFreeEnvironment:
         self.initial_state = problem.get_start_state()
         self.state = self.initial_state
 
-    def get_colors(self):
-        return list(set([dot.get_color() for dot in self.state.dots_list]))
-
     def reset(self):
         self.state = self.initial_state
         return self.state
