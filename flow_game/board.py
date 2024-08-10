@@ -15,6 +15,8 @@ class Board:
         self.game_board = self.initialize_board()
         self.choose_next_color()
         self.current_cost = 0
+        self.number_empty_cells = (self.board_size ** 2 - (len(self.dots_list)
+                                                           // 2))
 
     def get_cost(self):
         return self.current_cost
@@ -140,6 +142,7 @@ class Board:
         new_board.game_board = [row[:] for row in self.game_board]
         new_board.current_color = self.current_color
         new_board.current_cost = self.current_cost
+        new_board.number_empty_cells = self.number_empty_cells
         return new_board
 
     def finished_move(self, move, end_dot):
@@ -153,6 +156,7 @@ class Board:
     def do_move(self, move):
         new_board = self.__copy__()
         new_board.game_board[move.get_x()][move.get_y()] = move.get_color()
+        new_board.number_empty_cells -= 1
         end_dot = new_board.end_dots[move.get_color()]
         added_cost = 1
         if self.finished_move(move, end_dot):
@@ -166,7 +170,7 @@ class Board:
         return new_board
 
     def is_goal_state(self):
-        return len(self.remaining_colors) == 0
+        return len(self.remaining_colors) == 0 and self.number_empty_cells == 0
 
     def __eq__(self, other):
         for i in range(self.board_size):

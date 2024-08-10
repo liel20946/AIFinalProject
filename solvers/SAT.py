@@ -24,6 +24,8 @@
 # }
 
 import pycosat
+import tkinter as tk
+from gui import FlowFreeGUI
 
 
 class FlowFreeSAT:
@@ -169,6 +171,61 @@ class FlowFreeSAT:
                             [-self.direction_variables[dv][direction],
                              -dv_color, -neighbor_color])
 
+    # and '└' in
+    # self.direction_variables[(r + 1, c)] and '┐' in \
+    # self.direction_variables[(r, c + 1)] and '┘' in \
+    # self.direction_variables[(r + 1, c + 1]):
+    def add_square_preventing_constraints(self):
+        for r in range(self.board_size - 1):
+            for c in range(self.board_size - 1):
+                if (
+                        (r, c) in self.direction_variables and
+                        (r + 1, c) in self.direction_variables and
+                        (r, c + 1) in self.direction_variables and
+                        (r + 1, c + 1) in self.direction_variables
+                ):
+                    if '┌' in self.direction_variables[(r, c)] and \
+                            '└' in self.direction_variables[(r + 1, c)] and \
+                            '┐' in self.direction_variables[(r, c + 1)] and \
+                            '┘' in self.direction_variables[(r + 1, c + 1)]:
+                        self.cnf.append([
+                            -self.direction_variables[(r, c)]['┌'],
+                            -self.direction_variables[(r + 1, c)]['└'],
+                            -self.direction_variables[(r, c + 1)]['┐'],
+                            -self.direction_variables[(r + 1, c + 1)]['┘']
+                        ])
+
+    def add_cycle_preventing_constraints(self, coordinates):
+        cycle_cnf = []
+        first = True
+        for i in range(len(coordinates)):
+            if i==0 and first:
+                cycle_cnf.append(-self.direction_variables[coordinates[0][
+                    0]]['┌'])
+                first= False
+            elif i == len(coordinates) - 1:
+                cycle_cnf.append(
+                    -self.direction_variables[coordinates[i][0]]['└'])
+            else:
+                cycle_cnf.append(
+                    -self.direction_variables[coordinates[i][0]]['│'])
+            if i == 0 or i == len(coordinates) - 1:
+                action = '─'
+            else:
+                action = '│'
+            for j in range(1, len(coordinates[i])-1):
+                cycle_cnf.append(-self.direction_variables[coordinates[i][j]][action])
+
+            if i == 0:
+                cycle_cnf.append(-self.direction_variables[coordinates[i][
+                    len(coordinates[i])-1]]['┐'])
+            if i == len(coordinates) - 1:
+                cycle_cnf.append(-self.direction_variables[coordinates[i][
+                    len(coordinates[i])-1]]['┘'])
+
+        self.cnf.append(cycle_cnf)
+
+
     def get_neighbors(self, r, c):
         neighbors = []
         if r > 0: neighbors.append((r - 1, c))  # Up
@@ -177,16 +234,26 @@ class FlowFreeSAT:
         if c < self.board_size - 1: neighbors.append((r, c + 1))  # Right
         return neighbors
 
-    def solve(self):
+    def solve(self, dots_list):
         # Add constraints to CNF
         self.add_endpoint_constraints()
         self.add_single_color_constraints(self.variables)
         self.add_single_color_constraints(self.direction_variables)
         self.add_direction_same_color_constraints()
         self.completing_direction_neighbors_constraints()
-
+        # self.add_cycle_preventing_constraints()
         # Solve the SAT problem
-        solution = pycosat.solve(self.cnf)
+        is_solution_without_cycle = False
+        while(not is_solution_without_cycle):
+            solution = pycosat.solve(self.cnf)
+            if solution == "UNSAT":
+                return solution
+            solution_board = self.convert_sol_to_board(solution)
+            is_solution_without_cycle, coordinates = analyze_solution(
+                solution_board,
+                dots_list)
+            if coordinates:
+                self.add_cycle_preventing_constraints(coordinates)
         return solution
 
     def print_board(self):
@@ -276,3 +343,146 @@ def validate_sat_solution(sat_solution, dots_list):
     #     (3, 0): 'Y',
     #     (3, 3): 'Y'
     # }
+
+def group_by_row(coordinate_list):
+    if not coordinate_list:
+        return []
+
+    grouped_rows = []
+    current_row = []
+    current_row_num = coordinate_list[0][
+        0]  # Initialize with the row of the first element
+
+    for coord in coordinate_list:
+        x, y = coord
+        if x == current_row_num:
+            current_row.append((x, y))
+        else:
+            grouped_rows.append(current_row)
+            current_row = [(x, y)]
+            current_row_num = x
+
+    if current_row:
+        grouped_rows.append(current_row)
+
+    return grouped_rows
+
+
+
+
+def analyze_solution(board, dots_list):
+    total_cells = len(board) * len(board[0])
+    total_path_cells = 0
+    visited = set()
+
+    paths = []  # List to store paths
+
+    # Find paths based on the dots_list
+    for i in range(0, len(dots_list), 2):
+        start_dot = dots_list[i]
+        goal_dot = dots_list[i + 1]
+
+        start_x, start_y = start_dot.get_x(), start_dot.get_y()
+        goal_x, goal_y = goal_dot.get_x(), goal_dot.get_y()
+        color = start_dot.get_color()
+
+        path = find_path(board, start_x, start_y, color, visited)
+        path_cells = path.size
+        total_path_cells += path_cells
+        paths.append(path)  # Add path to paths list
+
+        last_node = path.get_last_node()
+        # Check if the last node matches the goal
+        # if last_node.x != goal_x or last_node.y != goal_y:
+        #     print(f"Error: Path for color {color} does not end at the goal: {goal_x}, {goal_y}")
+        #     print(f"Path ended at: {last_node.x}, {last_node.y} instead")
+
+    leftovers = []
+    # Identify leftover cells that are not part of any path
+    for x in range(len(board)):
+        for y in range(len(board[0])):
+            if (x, y) not in visited and board[x][y] != "empty":
+                leftovers.append((x, y))
+
+    # Check if the board is fully filled
+    unfilled_cells = total_cells - total_path_cells
+    if unfilled_cells == 0:
+        return True, None
+    else:
+        return False, group_by_row(leftovers)
+
+
+def find_path(board, start_x, start_y, color, visited):
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    path = LinkedList()
+    x, y = start_x, start_y
+
+    while True:
+        path.append(x, y)
+        visited.add((x, y))
+        found_next = False
+
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < len(board) and 0 <= ny < len(board[0]) and (
+                    nx, ny) not in visited:
+                if board[nx][ny] == color:
+                    x, y = nx, ny
+                    found_next = True
+                    break
+
+        if not found_next:
+            break
+
+    return path
+
+
+
+class Node:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.next = None
+
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+        self.size = 0
+        self.tail = None
+
+    def append(self, x, y):
+        new_node = Node(x, y)
+        if not self.head:
+            self.head = new_node
+        else:
+            current = self.head
+            while current.next:
+                current = current.next
+            current.next = new_node
+        self.tail = new_node
+        self.size += 1
+
+    def display(self):
+        current = self.head
+        path = []
+        current_row = []
+        current_row_num = current.x if current else None
+
+        while current:
+            if current.x == current_row_num:
+                current_row.append((current.x, current.y))
+            else:
+                path.append(current_row)
+                current_row = [(current.x, current.y)]
+                current_row_num = current.x
+            current = current.next
+
+        if current_row:
+            path.append(current_row)
+
+        return path
+
+    def get_last_node(self):
+        return self.tail
+

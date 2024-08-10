@@ -55,13 +55,13 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
         gui.display_win_message()  # Display "You Win" message when done
 
 
-def solve_with_search(algorithm_name, problem):
+def solve_with_search(algorithm_name, problem, dots_list):
     # Execute the solvers algorithm
     actions, elapsed_time = start_search(problem, algorithm_name)
     display_gui(problem, algorithm_name, actions, elapsed_time)
 
 
-def solve_with_rl(algorithm_name, problem):
+def solve_with_rl(algorithm_name, problem, dots_list):
     environment = FlowFreeEnvironment(problem)
     # Execute the solvers algorithm
     agent = choose_rl_agent(algorithm_name)
@@ -84,14 +84,13 @@ def convert_dots_to_sat_problem(dots):
     return list(colors), dot_dict
 
 
-def solve_with_sat(algorithm_name, problem):
+def solve_with_sat(algorithm_name, problem, dots_list):
     board_size, dots_array = problem.get_problem_vars()
     colors, initial_board = convert_dots_to_sat_problem(dots_array)
     sat_solver = FlowFreeSAT(board_size, colors, initial_board)
-    sat_solver.print_board()
 
     start_time = time.time()
-    solution = sat_solver.solve()
+    solution = sat_solver.solve(dots_list)
     elapsed_time = time.time() - start_time
 
     if solution == SAT_NO_SOLUTION:
@@ -148,13 +147,13 @@ solvers = {"A*": solve_with_search, "DFS": solve_with_search,
 
 def solve_game(algorithm, grid_size, dots_list):
     problem = FlowFreeProblem(grid_size, dots_list)
-    solvers.get(algorithm)(algorithm, problem)
+    solvers.get(algorithm)(algorithm, problem, dots_list)
 
 
 def main():
     algorithm = "SAT"
-    difficulty = "14"
-    set_number = 1
+    difficulty = "simple"
+    set_number = 4
     dots_list, board_size = get_level_dots(set_number, difficulty)
     solve_game(algorithm, board_size, dots_list)
 

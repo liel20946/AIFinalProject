@@ -187,12 +187,40 @@ def get_level_dots(set_number, difficulty):
                 Dot(13, 7, 'grey', False), Dot(9, 9, 'grey', True),
                 Dot(3, 8, 'green', False), Dot(13, 9, 'green', True),
                 Dot(9, 4, 'dark green', False), Dot(9, 7, 'dark green', True),
-                Dot(5, 6, 'light green', False), Dot(7, 7, 'light green',True),
+                Dot(5, 6, 'light green', False),
+                Dot(7, 7, 'light green', True),
             ], grid_size
     elif difficulty == "simple":
         if set_number == 2:
-            grid_size = 4
+            grid_size = 5
             return [
-                Dot(0, 0, 'red', False), Dot(3, 0, 'red', True),
-                Dot(1, 1, 'green', False), Dot(3, 1, 'green', True)
+                Dot(0, 0, 'red', False), Dot(0, 4, 'red', True),
+                Dot(1, 0, 'blue', False), Dot(1, 4, 'blue', True),
+                Dot(3, 1, 'green', False), Dot(3, 3, 'green', True),
+
+                # Dot(1, 1, 'green', False), Dot(3, 1, 'green', True)
+            ], grid_size
+        elif set_number == -1:
+            # just for testing
+            grid_size = 5
+            return [Dot(0, 0, 'blue', False), Dot(2, 2, 'green', False),
+                    Dot(3, 0, 'red', False), Dot(3, 1, 'green', True),
+                    Dot(3, 2, 'yellow', False), Dot(3, 4, 'blue', True),
+                    Dot(4, 0, 'yellow', True), Dot(4, 4, 'red', True)
+                    ], grid_size
+
+        elif set_number == 3:
+            grid_size = 5
+            return [
+                Dot(0, 0, 'blue', False), Dot(2, 2, 'green', False),
+                Dot(3, 0, 'red', False), Dot(3, 1, 'green', True),
+                Dot(3, 2, 'yellow', False), Dot(3, 4, 'blue', True),
+                Dot(4, 0, 'yellow', True), Dot(4, 4, 'red', True)
+            ], grid_size
+        elif set_number == 4:
+            grid_size = 5
+            return [
+                Dot(1, 0, 'blue', False), Dot(1, 4, 'blue', True),
+                Dot(0, 0, 'red', False), Dot(0, 4, 'red', True),
+                Dot(3, 1, 'green', False), Dot(3, 3, 'green', True)
             ], grid_size
