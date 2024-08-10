@@ -1,188 +1,296 @@
-import itertools
+# Example of how the self.variables looks like if the colors are (R, G, B,
+#                                                                 Y) and the
+# board is 4x4
+# {
+#     (0, 0): {'R': 1, 'G': 2, 'B': 3, 'Y': 4},
+#     (0, 1): {'R': 5, 'G': 6, 'B': 7, 'Y': 8},
+#     (0, 2): {'R': 9, 'G': 10, 'B': 11, 'Y': 12},
+#     (0, 3): {'R': 13, 'G': 14, 'B': 15, 'Y': 16},
+#
+#     (1, 0): {'R': 17, 'G': 18, 'B': 19, 'Y': 20},
+#     (1, 1): {'R': 21, 'G': 22, 'B': 23, 'Y': 24},
+#     (1, 2): {'R': 25, 'G': 26, 'B': 27, 'Y': 28},
+#     (1, 3): {'R': 29, 'G': 30, 'B': 31, 'Y': 32},
+#
+#     (2, 0): {'R': 33, 'G': 34, 'B': 35, 'Y': 36},
+#     (2, 1): {'R': 37, 'G': 38, 'B': 39, 'Y': 40},
+#     (2, 2): {'R': 41, 'G': 42, 'B': 43, 'Y': 44},
+#     (2, 3): {'R': 45, 'G': 46, 'B': 47, 'Y': 48},
+#
+#     (3, 0): {'R': 49, 'G': 50, 'B': 51, 'Y': 52},
+#     (3, 1): {'R': 53, 'G': 54, 'B': 55, 'Y': 56},
+#     (3, 2): {'R': 57, 'G': 58, 'B': 59, 'Y': 60},
+#     (3, 3): {'R': 61, 'G': 62, 'B': 63, 'Y': 64},
+# }
+
 import pycosat
-from functools import reduce
-
-LEFT = 1
-RIGHT = 2
-TOP = 4
-BOTTOM = 8
-
-DELTAS = [(LEFT, 0, -1),
-          (RIGHT, 0, 1),
-          (TOP, -1, 0),
-          (BOTTOM, 1, 0)]
-
-DIR_TYPES = [LEFT | RIGHT, TOP | BOTTOM, TOP | LEFT, TOP | RIGHT,
-             BOTTOM | LEFT, BOTTOM | RIGHT]
-DIR_FLIP = {LEFT: RIGHT, RIGHT: LEFT, TOP: BOTTOM, BOTTOM: TOP}
+import tkinter as tk
+from gui import FlowFreeGUI
+from main import display_initial_board
+from level_creator import get_level_dots
+from flow_game.flow_free_problem import FlowFreeProblem
+from main import display_gui
 
 
-class FlowFreeSolver:
-    def __init__(self, size, colors, dots):
-        self.size = size
+class FlowFreeSAT:
+    def __init__(self, board_size, colors, initial_board=None):
+        self.board_size = board_size
         self.colors = colors
-        self.dots = dots
+        self.num_colors = len(colors)
+        self.variables = {}
+        self.direction_variables = {}
+        self.directions = {'─': [(0, -1), (0, 1)], '│': [(-1, 0), (1, 0)],
+                           '┘': [(-1, 0), (0, -1)], '└': [(-1, 0), (0, 1)],
+                           '┐': [(0, -1), (1, 0)], '┌': [(0, 1), (1, 0)]}
+        self.reverse_directions = {'─': '│', '│': '─', '┘': '┌', '└': '┐',
+                                   '┐': '└', '┌': '┘'}
+        self.cnf = []
+        self.initial_board = initial_board or {}
 
-    def color_var(self, i, j, color):
-        return (i * self.size + j) * len(self.colors) + color + 1
+        # Initialize variables for each cell and color
+        self.initialize_variables()
+        # Add initial board constraints
+        self.add_initial_board_constraints()
 
-    def make_color_clauses(self):
-        clauses = []
-        num_colors = len(self.colors)
+    def check_coords(self, r, c):
+        return 0 <= r < self.board_size and 0 <= c < self.board_size
 
-        for i in range(self.size):
-            for j in range(self.size):
-                cell = self.dots[i][j]
-                if cell in self.colors:
-                    color_index = self.colors[cell]
-                    clauses.append([self.color_var(i, j, color_index)])
-                    for other_color in range(num_colors):
-                        if other_color != color_index:
-                            clauses.append(
-                                [-self.color_var(i, j, other_color)])
-                # else:
-                #     clauses.append([self.color_var(i, j, color) for color in
-                #                     range(num_colors)])
-                    # clauses.extend(self.no_two(
-                    #     [self.color_var(i, j, color) for color in
-                    #      range(num_colors)]))
+    # Example above
+    def initialize_variables(self):
+        var_id = 1
+        for r in range(self.board_size):
+            for c in range(self.board_size):
+                self.variables[(r, c)] = {}
+                for color in self.colors:
+                    self.variables[(r, c)][color] = var_id
+                    var_id += 1
 
-        return clauses
+        # Initialize variables for each cell and direction
 
-    def no_two(self, satvars):
-        return ((-a, -b) for a, b in itertools.combinations(satvars, 2))
+        for r in range(self.board_size):
+            for c in range(self.board_size):
+                if (r, c) not in self.initial_board:
+                    self.direction_variables[(r, c)] = {}
+                    for direction in self.directions:
+                        valid = True
+                        for sub_directions in self.directions[direction]:
+                            dr, dc = sub_directions
+                            nr, nc = r + dr, c + dc
+                            if not self.check_coords(nr, nc):
+                                valid = False
+                                break
+                        if valid:
+                            self.direction_variables[(r, c)][
+                                direction] = var_id
+                            var_id += 1
 
-    def make_dir_vars(self):
-        dir_vars = {}
-        num_dir_vars = 0
+    # this method ensures that any cell with a predefined color in the initial board
+    # is constrained to that color, and that no other colors are allowed in that cell.
+    # For example for constraints for cell (1, 0) being 'R' will output :
+    # [17], [-18], [-19], [-20]
+    def add_initial_board_constraints(self):
+        for (r, c), color in self.initial_board.items():
+            for other_color in self.colors:
+                if color == other_color:
+                    self.cnf.append([self.variables[(r, c)][color]])
+                else:
+                    self.cnf.append([-self.variables[(r, c)][other_color]])
 
-        for i in range(self.size):
-            for j in range(self.size):
-                if self.dots[i][j] in self.colors:
-                    continue
+    # endpoint (a cell with a predefined color in the initial board) must be connected to
+    # exactly one of its neighboring cells of the same color
+    # assume : the cell (1, 0) with color 'R', it's neighbors and vaitables
+    # id for 'R': (0, 0): 1, (2, 0): 33, (1, 1): 21
+    # CNF Clauses
+    # [
+    #     [1, 33, 21],  # At least one neighbor is 'R'
+    #     [-1, -33],
+    #     # At most one neighbor is 'R' (not both (0, 0) and (2, 0) can be 'R')
+    #     [-1, -21],
+    #     # At most one neighbor is 'R' (not both (0, 0) and (1, 1) can be 'R')
+    #     [-33, -21],
+    #     # At most one neighbor is 'R' (not both (2, 0) and (1, 1) can be 'R')
+    #     # Similar clauses would be added for other endpoints like (0, 3), (0, 0), (1, 3), etc.
+    # ]
 
-                cell_flags = reduce(lambda x, y: x | y, [bit for bit, ni, nj in
-                                                         self.valid_neighbors(
-                                                             i, j)], 0)
-                dir_vars[(i, j)] = {code: num_dir_vars + 1 for code in
-                                    DIR_TYPES if cell_flags & code == code}
-                num_dir_vars += len(dir_vars[(i, j)])
+    def add_endpoint_constraints(self):
+        for (r, c), color in self.initial_board.items():
+            neighbors = self.get_neighbors(r, c)
+            neighbor_vars = [self.variables[nr, nc][color] for nr, nc in
+                             neighbors if (nr, nc) in self.variables]
 
-        return dir_vars, num_dir_vars
+            # Exactly one neighbor must match the cell's color
+            self.cnf.append(neighbor_vars)  # At least one neighbor
+            for i in range(len(neighbor_vars)):
+                for j in range(i + 1, len(neighbor_vars)):
+                    # Adding the clause to ensure no two neighbors can both have the same color
+                    self.cnf.append([-neighbor_vars[i], -neighbor_vars[j]])
 
-    def valid_neighbors(self, i, j):
-        return [(dir_bit, i + delta_i, j + delta_j) for
-                dir_bit, delta_i, delta_j in DELTAS if
-                0 <= i + delta_i < self.size and 0 <= j + delta_j < self.size]
+    # Every cell is assigned a single color.
+    def add_single_color_constraints(self, variables):
+        for r in range(self.board_size):
+            for c in range(self.board_size):
+                if (
+                        r,
+                        c) not in self.initial_board:  # Only for non-endpoint cells
+                    color_vars = [variables[(r, c)][color] for color in
+                                  variables[(r, c)]]
 
-    def make_dir_clauses(self, color_var, dir_vars):
-        dir_clauses = []
+                    # Each cell must have at least one color
+                    self.cnf.append(color_vars)
 
-        for i in range(self.size):
-            for j in range(self.size):
-                if self.dots[i][j] in self.colors:
-                    continue
+                    # No cell can have more than one color
+                    for i in range(len(color_vars)):
+                        for j in range(i + 1, len(color_vars)):
+                            self.cnf.append([-color_vars[i], -color_vars[j]])
 
-                cell_dir_vars = list(dir_vars.get((i, j), {}).values())
-                if cell_dir_vars:
-                    dir_clauses.append(cell_dir_vars)
-                    dir_clauses.extend(self.no_two(cell_dir_vars))
+    def add_direction_same_color_constraints(self):
+        for dv in self.direction_variables:
+            for direction in self.direction_variables[dv]:
+                for sub_directions in self.directions[direction]:
+                    x, y = dv[0] + sub_directions[0], dv[1] + sub_directions[1]
+                    neighbor_coord = (x, y)
+                    for color in self.variables[neighbor_coord]:
+                        dv_color = self.variables[dv][color]
+                        neighbor_color = self.variables[neighbor_coord][color]
+                        self.cnf.append(
+                            [-self.direction_variables[dv][direction],
+                             -dv_color, neighbor_color])
+                        self.cnf.append(
+                            [-self.direction_variables[dv][direction],
+                             dv_color, -neighbor_color])
 
-                    for color in range(len(self.colors)):
-                        color_1 = color_var(i, j, color)
-                        for dir_bit, ni, nj in self.valid_neighbors(i, j):
-                            color_2 = color_var(ni, nj, color)
-                            for dir_type, dir_var in dir_vars.get((i, j),
-                                                                  {}).items():
-                                if dir_type & dir_bit:
-                                    dir_clauses.append(
-                                        [-dir_var, -color_1, color_2])
-                                    dir_clauses.append(
-                                        [-dir_var, color_1, -color_2])
-                                elif 0 <= ni < self.size and 0 <= nj < self.size:
-                                    dir_clauses.append(
-                                        [-dir_var, -color_1, -color_2])
+    def completing_direction_neighbors_constraints(self):
+        for dv in self.direction_variables:
+            for direction in self.direction_variables[dv]:
+                reverse_direction = self.reverse_directions[direction]
+                for sub_directions in self.directions[reverse_direction]:
+                    x, y = dv[0] + sub_directions[0], dv[1] + sub_directions[1]
+                    neighbor_coord = (x, y)
+                    if not self.check_coords(x, y):
+                        continue
+                    for color in self.variables[neighbor_coord]:
+                        dv_color = self.variables[dv][color]
+                        neighbor_color = self.variables[neighbor_coord][color]
+                        self.cnf.append(
+                            [-self.direction_variables[dv][direction],
+                             -dv_color, -neighbor_color])
 
-        return dir_clauses
+    def get_neighbors(self, r, c):
+        neighbors = []
+        if r > 0: neighbors.append((r - 1, c))  # Up
+        if r < self.board_size - 1: neighbors.append((r + 1, c))  # Down
+        if c > 0: neighbors.append((r, c - 1))  # Left
+        if c < self.board_size - 1: neighbors.append((r, c + 1))  # Right
+        return neighbors
 
     def solve(self):
-        color_var = self.color_var
-        color_clauses = self.make_color_clauses()
-        # dir_vars, num_dir_vars = self.make_dir_vars()
-        # dir_clauses = self.make_dir_clauses(color_var, dir_vars)
-        #
-        # num_vars = len(self.colors) * self.size ** 2 + num_dir_vars
-        # clauses = color_clauses + dir_clauses
-        clauses = color_clauses
+        # Add constraints to CNF
+        self.add_endpoint_constraints()
+        self.add_single_color_constraints(self.variables)
+        self.add_single_color_constraints(self.direction_variables)
+        self.add_direction_same_color_constraints()
+        self.completing_direction_neighbors_constraints()
 
-        solution = pycosat.solve(clauses)
-        if solution == 'UNSAT':
-            return 'UNSAT'
-
+        # Solve the SAT problem
+        solution = pycosat.solve(self.cnf)
         return solution
 
-    def decode_solution(self, sol):
-        num_colors = len(self.colors)
-        decoded = [['' for _ in range(self.size)] for _ in range(self.size)]
+    def print_board(self):
+        board = [['.' for _ in range(self.board_size)] for _ in
+                 range(self.board_size)]
+        for (r, c), color in self.initial_board.items():
+            board[r][c] = color
+        for row in board:
+            print(' '.join(row))
 
-        for i in range(self.size):
-            for j in range(self.size):
-                cell_color = -1
-                for color in range(num_colors):
-                    if self.color_var(i, j, color) in sol:
-                        cell_color = color
-                decoded[i][j] = cell_color
-
-        return decoded
-
-    def initialize_board(self):
-        # Create an empty board
-        board = [['' for _ in range(self.board_size)] for _ in
+    def print_solution(self, solution):
+        board = [['.' for _ in range(self.board_size)] for _ in
                  range(self.board_size)]
 
-        # Place two dots for each color
-        num_colors = len(self.colors)
-        color_positions = {color: [] for color in self.colors}
+        for r in range(self.board_size):
+            for c in range(self.board_size):
+                for color in self.colors:
+                    var = self.variables[(r, c)][color]
+                    if var in solution:
+                        board[r][c] = color
 
-        # Generate pairs of positions for each color
-        positions = [(i, j) for i in range(self.board_size) for j in
-                     range(self.board_size)]
-        random.shuffle(positions)
+        print("\nSolution Board:")
+        for row in board:
+            print(' '.join(row))
 
-        for color in self.colors:
-            pos1 = positions.pop()
-            pos2 = positions.pop()
-            color_positions[color] = [pos1, pos2]
+    def display_solution(self, solution):
+        dots_list = []
+        board = [['.' for _ in range(self.board_size)] for _ in
+                 range(self.board_size)]
 
-        # Place dots on the board
-        for color, (pos1, pos2) in color_positions.items():
-            board[pos1[0]][pos1[1]] = color
-            board[pos2[0]][pos2[1]] = color
+        for r in range(self.board_size):
+            for c in range(self.board_size):
+                for color in self.colors:
+                    var = self.variables[(r, c)][color]
+                    if var in solution:
+                        board[r][c] = color
 
-        return board
+        root = tk.Tk()
+        flow_free_gui = FlowFreeGUI(root, self.board_size, self.board_size)
+        flow_free_gui.display_solved_board(board)
 
-def display_board(self):
-    for row in self.board:
-        print(' '.join([cell if cell else '.' for cell in row]))
+        # Start the Tkinter event loop
+        root.mainloop()
+
+
+def convert_dots_to_SAT_problem(dots):
+    dot_dict = {}
+    colors = set()
+    for dot in dots:
+        colors.add(dot.get_color())
+        pos = (dot.get_x(), dot.get_y())
+        dot_dict[pos] = dot.get_color()
+    return list(colors), dot_dict
+
+
+def display_initial_board_for_SAT():
+    problem = FlowFreeProblem(board_size, dots_array)
+    display_initial_board(problem)
+
 
 if __name__ == "__main__":
-    # Example usage
-    size = 5
-    colors = {'R': 0, 'B': 1}
-    dots = [
-        ['R', '', 'R', '', ''],
-        ['', '', '', '', ''],
-        ['', '', '', '', ''],
-        ['', '', '', '', ''],
-        ['', 'B', '', '', 'B']
-    ]
+    # Example initial board setup
+    # board_size = 4
+    # colors = ['R', 'G', 'B', 'Y']
+    # # Option 1
+    # initial_board = {
+    #     (0, 0): 'R',
+    #     (0, 3): 'R',
+    #     (1, 0): 'G',
+    #     (1, 3): 'G',
+    #     (2, 0): 'B',
+    #     (2, 3): 'B',
+    #     (3, 0): 'Y',
+    #     (3, 3): 'Y'
+    # }
+    # # Option 2 - no solution
+    # initial_board = {
+    #     (1, 0): 'R',
+    #     (0, 3): 'R',
+    #     (0, 0): 'G',
+    #     (1, 3): 'G',
+    #     (2, 0): 'B',
+    #     (2, 3): 'B',
+    #     (3, 0): 'Y',
+    #     (3, 3): 'Y'
+    # }
 
-    solver = FlowFreeSolver(size, colors, dots)
-    solution = solver.solve()
+    dots_array, board_size = get_level_dots(1, "12")
+    colors, initial_board = convert_dots_to_SAT_problem(dots_array)
+
+    sat_solver = FlowFreeSAT(board_size, colors, initial_board)
+    sat_solver.print_board()
+
+    solution = sat_solver.solve()
 
     if solution == 'UNSAT':
-        print("The puzzle is unsolvable.")
+        print("No solution found.")
     else:
-        decoded = solver.decode_solution(solution)
-        for row in decoded:
-            print(' '.join(str(c) for c in row))
+        print("Solution found.")
+        # sat_solver.print_solution(solution)
+        sat_solver.display_solution(solution)

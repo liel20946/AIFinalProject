@@ -117,3 +117,22 @@ class FlowFreeGUI:
                                          self.cell_size * 4 // 5, fill=color,
                                          outline="")
 
+    def display_solved_board(self, solved_board):
+        """
+        Displays the solved board and connects the cells of the same color.
+
+        :param solved_board: 2D list representing the solved board with color names
+        """
+        for i in range(self.board_height):
+            for j in range(self.board_width):
+                color = solved_board[i][j]
+                self.cells[i][j].delete("all")
+                if color != 'black':
+                    self.cells[i][j].create_oval(self.cell_size // 5,
+                                                 self.cell_size // 5,
+                                                 self.cell_size * 4 // 5,
+                                                 self.cell_size * 4 // 5,
+                                                 fill=color, outline="")
+
+        self.connect_adjacent_cells(solved_board)
+

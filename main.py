@@ -50,13 +50,13 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
 
 def solve_with_search():
     algorithm_name = "A*"
-    dots_list, grid_size = get_level_dots(2, "extreme")
+    dots_list, grid_size = get_level_dots(3, "easy")
     problem = FlowFreeProblem(grid_size, dots_list)
-    # display_initial_board(problem)
+    display_initial_board(problem)
 
     # Execute the solvers algorithm
-    actions, elapsed_time = start_search(problem, algorithm_name)
-    display_gui(problem, algorithm_name, actions, elapsed_time)
+    # actions, elapsed_time = start_search(problem, algorithm_name)
+    # display_gui(problem, algorithm_name, actions, elapsed_time)
 
 
 def solve_with_rl():
