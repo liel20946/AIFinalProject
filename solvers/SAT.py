@@ -224,6 +224,33 @@ class FlowFreeSAT:
                         board[r][c] = color
         return board
 
+def is_path_connected(board, start_dot, end_dot):
+    # Implement a basic DFS to check if there's a path from start to end
+    visited = set()
+    stack = [(start_dot.get_x(), start_dot.get_y())]
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    while stack:
+        x, y = stack.pop()
+        if (x, y) == (end_dot.get_x(), end_dot.get_y()):
+            return True
+        if (x, y) not in visited:
+            visited.add((x, y))
+            for dx, dy in directions:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < len(board) and 0 <= ny < len(board[0]) and \
+                        board[nx][ny] == start_dot.get_color():
+                    stack.append((nx, ny))
+    return False
+
+def validate_sat_solution(sat_solution, dots_list):
+    for i in range(0, len(dots_list), 2):
+        start_dot = dots_list[i]
+        end_dot = dots_list[i + 1]
+        if not is_path_connected(sat_solution, start_dot, end_dot):
+            return False
+    return True
+
     # Example initial board setup
     # board_size = 4
     # colors = ['R', 'G', 'B', 'Y']

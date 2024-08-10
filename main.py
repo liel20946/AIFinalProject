@@ -152,9 +152,9 @@ def solve_game(algorithm, grid_size, dots_list):
 
 
 def main():
-    algorithm = "AQ learning"
-    difficulty = "easy"
-    set_number = 2
+    algorithm = "SAT"
+    difficulty = "14"
+    set_number = 1
     dots_list, board_size = get_level_dots(set_number, difficulty)
     solve_game(algorithm, board_size, dots_list)
 

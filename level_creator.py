@@ -180,7 +180,6 @@ def get_level_dots(set_number, difficulty):
                 Dot(2, 11, 'teal', False), Dot(5, 4, 'teal', True),
                 Dot(8, 7, 'orange', False), Dot(10, 3, 'orange', True),
                 Dot(4, 1, 'purple', False), Dot(12, 12, 'purple', True),
-
                 Dot(7, 0, 'yellow', False), Dot(4, 10, 'yellow', True),
                 Dot(8, 4, 'white', False), Dot(7, 11, 'white', True),
                 Dot(10, 2, 'pink', False), Dot(11, 4, 'pink', True),
@@ -189,7 +188,6 @@ def get_level_dots(set_number, difficulty):
                 Dot(3, 8, 'green', False), Dot(13, 9, 'green', True),
                 Dot(9, 4, 'dark green', False), Dot(9, 7, 'dark green', True),
                 Dot(5, 6, 'light green', False), Dot(7, 7, 'light green',True),
-
             ], grid_size
     elif difficulty == "simple":
         if set_number == 2:
