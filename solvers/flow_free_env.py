@@ -67,7 +67,7 @@ class FlowFreeEnvironment:
             reward = 1000
         elif no_moves:
             reward = -1000
-        elif action.get_color() not in self.state.color_lst:
+        elif action.get_color() not in self.state.remaining_colors:
             reward = 50 * (total_number_of_pairs - len(self.state.paths)) / total_number_of_pairs
         elif action.get_color() not in [move.get_color() for move in self.state.get_legal_moves()]:
             reward = -200

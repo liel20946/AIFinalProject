@@ -10,6 +10,11 @@ class FlowFreeProblem:
     def __init__(self, board_size, dots_list):
         self.board = Board(board_size, dots_list)
         self.expanded = 0
+        self.board_size = board_size
+        self.dots_list = dots_list
+
+    def get_problem_vars(self):
+        return self.board_size, self.dots_list
 
     def get_start_state(self):
         """

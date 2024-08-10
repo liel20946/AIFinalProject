@@ -24,12 +24,6 @@
 # }
 
 import pycosat
-import tkinter as tk
-from gui import FlowFreeGUI
-from main import display_initial_board
-from level_creator import get_level_dots
-from flow_game.flow_free_problem import FlowFreeProblem
-from main import display_gui
 
 
 class FlowFreeSAT:
@@ -218,8 +212,7 @@ class FlowFreeSAT:
         for row in board:
             print(' '.join(row))
 
-    def display_solution(self, solution):
-        dots_list = []
+    def convert_sol_to_board(self, solution):
         board = [['.' for _ in range(self.board_size)] for _ in
                  range(self.board_size)]
 
@@ -229,31 +222,8 @@ class FlowFreeSAT:
                     var = self.variables[(r, c)][color]
                     if var in solution:
                         board[r][c] = color
+        return board
 
-        root = tk.Tk()
-        flow_free_gui = FlowFreeGUI(root, self.board_size, self.board_size)
-        flow_free_gui.display_solved_board(board)
-
-        # Start the Tkinter event loop
-        root.mainloop()
-
-
-def convert_dots_to_SAT_problem(dots):
-    dot_dict = {}
-    colors = set()
-    for dot in dots:
-        colors.add(dot.get_color())
-        pos = (dot.get_x(), dot.get_y())
-        dot_dict[pos] = dot.get_color()
-    return list(colors), dot_dict
-
-
-def display_initial_board_for_SAT():
-    problem = FlowFreeProblem(board_size, dots_array)
-    display_initial_board(problem)
-
-
-if __name__ == "__main__":
     # Example initial board setup
     # board_size = 4
     # colors = ['R', 'G', 'B', 'Y']
@@ -279,18 +249,3 @@ if __name__ == "__main__":
     #     (3, 0): 'Y',
     #     (3, 3): 'Y'
     # }
-
-    dots_array, board_size = get_level_dots(1, "12")
-    colors, initial_board = convert_dots_to_SAT_problem(dots_array)
-
-    sat_solver = FlowFreeSAT(board_size, colors, initial_board)
-    sat_solver.print_board()
-
-    solution = sat_solver.solve()
-
-    if solution == 'UNSAT':
-        print("No solution found.")
-    else:
-        print("Solution found.")
-        # sat_solver.print_solution(solution)
-        sat_solver.display_solution(solution)

@@ -3,11 +3,16 @@ import time
 from flow_game.flow_free_problem import FlowFreeProblem
 from level_creator import get_level_dots
 from solvers import solver
+from solvers.SAT import FlowFreeSAT
 from solvers.q_learning_agent import QLearningAgent
 from solvers.flow_free_env import FlowFreeEnvironment
 from gui import FlowFreeGUI
 import solvers.heuristics as heuristics
 from solvers.approx_q_learning import ApproxQLearningAgent
+
+SAT_NO_SOLUTION = "UNSAT"
+NO_SOLUTION_MESSAGE = "No solution found."
+SOLUTION_FOUND_MESSAGE = "Solution found."
 
 
 def run_search_algorithm(search_algorithm_name, problem):
@@ -55,8 +60,8 @@ def solve_with_search():
     display_initial_board(problem)
 
     # Execute the solvers algorithm
-    # actions, elapsed_time = start_search(problem, algorithm_name)
-    # display_gui(problem, algorithm_name, actions, elapsed_time)
+    actions, elapsed_time = start_search(problem, algorithm_name)
+    display_gui(problem, algorithm_name, actions, elapsed_time)
 
 
 def solve_with_rl():
@@ -73,6 +78,38 @@ def solve_with_rl():
     actions = agent.solve(initial_state, environment)
 
     display_gui(problem, algorithm_name, actions, 0)
+
+
+def convert_dots_to_sat_problem(dots):
+    dot_dict = {}
+    colors = set()
+    for dot in dots:
+        colors.add(dot.get_color())
+        pos = (dot.get_x(), dot.get_y())
+        dot_dict[pos] = dot.get_color()
+    return list(colors), dot_dict
+
+
+def solve_with_sat(algorithm_name, problem):
+    board_size, dots_array = problem.get_problem_vars()
+    colors, initial_board = convert_dots_to_sat_problem(dots_array)
+    sat_solver = FlowFreeSAT(board_size, colors, initial_board)
+    sat_solver.print_board()
+
+    start_time = time.time()
+    solution = sat_solver.solve()
+    elapsed_time = time.time() - start_time
+
+    if solution == SAT_NO_SOLUTION:
+        print(NO_SOLUTION_MESSAGE)
+    else:
+        print(SOLUTION_FOUND_MESSAGE)
+        root = tk.Tk()
+        flow_free_gui = FlowFreeGUI(root, board_size, board_size)
+        flow_free_gui.display_solved_board(sat_solver.convert_sol_to_board(
+            solution), algorithm_name, elapsed_time)
+        # Start the Tkinter event loop
+        root.mainloop()
 
 
 def display_initial_board(problem):
@@ -108,11 +145,9 @@ def display_gui(problem, algorithm_name, actions, elapsed_time):
 
     root.mainloop()
 
-
 def main():
     solve_with_search()
     # solve_with_rl()
-
 
 if __name__ == "__main__":
     main()

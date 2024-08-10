@@ -68,7 +68,7 @@ class ApproxQLearningAgent:
         return random.choice(best_actions), False
 
     def get_next_actions(self, state):
-        color_moves = state.get_legal_moves_for_specific_color()
+        color_moves = state.get_legal_moves()
         if len(color_moves) == 0:
             return []
         return color_moves

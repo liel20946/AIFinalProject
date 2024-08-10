@@ -3,13 +3,24 @@ import tkinter as tk
 class FlowFreeGUI:
     def __init__(self, root, board_width, board_height):
         self.root = root
+
+        # Get screen width and height
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+
+        # Adjust cell size to fit within the screen, with some padding
+        max_cell_size_width = screen_width // (board_width + 2)
+        max_cell_size_height = screen_height // (board_height + 4)  # Adding extra rows for labels
+        self.cell_size = min(max_cell_size_width, max_cell_size_height)
+
+        # Calculate the overall board size
         self.board_width = board_width
         self.board_height = board_height
-        self.cell_size = 100
         self.cells = [[None for _ in range(board_width)] for _ in range(board_height)]
         self.expanded_nodes = 0
-        self.search_time = 0.0  # To store the solvers algorithm time
+        self.search_time = 0.0  # To store the solver's algorithm time
         self.algorithm_name = ""  # To store the algorithm name
+
         self.setup_gui()
         self.center_window()
 
@@ -67,7 +78,7 @@ class FlowFreeGUI:
 
     def update_labels(self):
         self.expanded_nodes_label.config(text=f"expanded nodes: {self.expanded_nodes}")
-        self.search_time_label.config(text=f"time: {self.search_time:.2f} s")
+        self.search_time_label.config(text=f"time: {self.search_time:.4f} s")
         self.algorithm_name_label.config(text=f"algorithm: {self.algorithm_name}")
 
     def set_expanded_nodes(self, expanded_nodes):
@@ -117,11 +128,15 @@ class FlowFreeGUI:
                                          self.cell_size * 4 // 5, fill=color,
                                          outline="")
 
-    def display_solved_board(self, solved_board):
+    def display_solved_board(self, solved_board, algorithm_name=None,
+                             search_time=None):
         """
         Displays the solved board and connects the cells of the same color.
+        Updates the algorithm name and search time if provided.
 
         :param solved_board: 2D list representing the solved board with color names
+        :param algorithm_name: (optional) The name of the algorithm used to solve the board
+        :param search_time: (optional) The time taken by the algorithm to solve the board
         """
         for i in range(self.board_height):
             for j in range(self.board_width):
@@ -136,3 +151,10 @@ class FlowFreeGUI:
 
         self.connect_adjacent_cells(solved_board)
 
+        # Update the algorithm name and search time if provided
+        if algorithm_name is not None:
+            self.algorithm_name = algorithm_name
+        if search_time is not None:
+            self.search_time = search_time
+
+        self.update_labels()

@@ -151,18 +151,46 @@ def get_level_dots(set_number, difficulty):
         grid_size = 12
         if set_number == 1:
             return [
-                Dot(4, 5, 'red', False), Dot(9, 4, 'red', True),
-                Dot(7, 9, 'green', False), Dot(4, 4, 'green', True),
-                Dot(3, 3, 'blue', False), Dot(9, 12, 'blue', True),
-                Dot(5, 11, 'yellow', False), Dot(11, 5, 'yellow', True),
-                Dot(9, 10, 'orange', False), Dot(7, 7, 'orange', True),
-                Dot(9, 3, 'purple', False), Dot(7, 1, 'purple', True),
-                Dot(8, 1, 'cyan', False), Dot(11, 2, 'cyan', True),
-                Dot(12, 5, 'pink', False), Dot(10, 12, 'pink', True),
-                Dot(1, 12, 'brown', False), Dot(3, 12, 'brown', True)
+                Dot(4, 2, 'red', False), Dot(2, 10, 'red', True),
+                Dot(9, 6, 'blue', False), Dot(10, 10, 'blue', True),
+                Dot(2, 9, 'light blue', False), Dot(4, 9, 'light blue', True),
+                Dot(11, 3, 'yellow', False), Dot(2, 8, 'yellow', True),
+                Dot(0, 8, 'orange', False), Dot(0, 11, 'orange', True),
+                Dot(5, 6, 'purple', False), Dot(7, 2, 'purple', True),
+
+                Dot(7, 1, 'white', False), Dot(9, 3, 'white', True),
+                Dot(1, 1, 'pink', False), Dot(10, 9, 'pink', True),
+                Dot(5, 2, 'brown', False), Dot(6, 5, 'brown', True),
+                Dot(8, 8, 'grey', False), Dot(10, 8, 'grey', True),
+                Dot(10, 0, 'green', False), Dot(11, 2, 'green', True),
+                Dot(1, 5, 'dark green', False), Dot(2, 7, 'dark green', True),
+                Dot(1, 6, 'light green', False), Dot(2, 3, 'light green',
+                                                     True),
+
             ], grid_size
 
+    elif difficulty == "14":
+        grid_size = 14
+        if set_number == 1:
+            return [
+                Dot(5, 3, 'red', False), Dot(6, 7, 'red', True),
+                Dot(8, 9, 'blue', False), Dot(11, 10, 'blue', True),
+                Dot(6, 2, 'light blue', False), Dot(6, 4, 'light blue', True),
+                Dot(1, 1, 'dark blue', False), Dot(1, 5, 'dark blue', True),
+                Dot(2, 11, 'teal', False), Dot(5, 4, 'teal', True),
+                Dot(8, 7, 'orange', False), Dot(10, 3, 'orange', True),
+                Dot(4, 1, 'purple', False), Dot(12, 12, 'purple', True),
 
+                Dot(7, 0, 'yellow', False), Dot(4, 10, 'yellow', True),
+                Dot(8, 4, 'white', False), Dot(7, 11, 'white', True),
+                Dot(10, 2, 'pink', False), Dot(11, 4, 'pink', True),
+                Dot(13, 10, 'brown', False), Dot(10, 13, 'brown', True),
+                Dot(13, 7, 'grey', False), Dot(9, 9, 'grey', True),
+                Dot(3, 8, 'green', False), Dot(13, 9, 'green', True),
+                Dot(9, 4, 'dark green', False), Dot(9, 7, 'dark green', True),
+                Dot(5, 6, 'light green', False), Dot(7, 7, 'light green',True),
+
+            ], grid_size
     elif difficulty == "simple":
         if set_number == 2:
             grid_size = 4
