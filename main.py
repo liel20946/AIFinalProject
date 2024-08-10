@@ -1,5 +1,7 @@
 import tkinter as tk
 import time
+
+import level_creator
 from flow_game.flow_free_problem import FlowFreeProblem
 from level_creator import get_level_dots
 from solvers import solver
@@ -53,21 +55,13 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
         gui.display_win_message()  # Display "You Win" message when done
 
 
-def solve_with_search():
-    algorithm_name = "A*"
-    dots_list, grid_size = get_level_dots(3, "easy")
-    problem = FlowFreeProblem(grid_size, dots_list)
-    display_initial_board(problem)
-
+def solve_with_search(algorithm_name, problem):
     # Execute the solvers algorithm
     actions, elapsed_time = start_search(problem, algorithm_name)
     display_gui(problem, algorithm_name, actions, elapsed_time)
 
 
-def solve_with_rl():
-    algorithm_name = "AQ learning"
-    dots_list, grid_size = get_level_dots(2, "medium")
-    problem = FlowFreeProblem(grid_size, dots_list)
+def solve_with_rl(algorithm_name, problem):
     environment = FlowFreeEnvironment(problem)
     # Execute the solvers algorithm
     agent = choose_rl_agent(algorithm_name)
@@ -145,9 +139,25 @@ def display_gui(problem, algorithm_name, actions, elapsed_time):
 
     root.mainloop()
 
+
+solvers = {"A*": solve_with_search, "DFS": solve_with_search,
+           "BFS": solve_with_search, "UCS": solve_with_search,
+           "SAT": solve_with_sat, "Q learning": solve_with_rl,
+           "AQ learning": solve_with_rl}
+
+
+def solve_game(algorithm, grid_size, dots_list):
+    problem = FlowFreeProblem(grid_size, dots_list)
+    solvers.get(algorithm)(algorithm, problem)
+
+
 def main():
-    solve_with_search()
-    # solve_with_rl()
+    algorithm = "AQ learning"
+    difficulty = "easy"
+    set_number = 2
+    dots_list, board_size = get_level_dots(set_number, difficulty)
+    solve_game(algorithm, board_size, dots_list)
+
 
 if __name__ == "__main__":
     main()
