@@ -2,6 +2,7 @@ import tkinter as tk
 import time
 
 from flow_game.flow_free_problem import FlowFreeProblem
+from problems.image_to_dots import convert_image_to_dots
 from level_creator import get_level_dots
 from solvers import solver
 from solvers.SAT import FlowFreeSAT
@@ -195,6 +196,7 @@ def display_gui(problem, algorithm_name, actions, elapsed_time):
 
     root.mainloop()
 
+
 # dictionary of solvers
 solvers = {"A*": solve_with_search, "DFS": solve_with_search,
            "BFS": solve_with_search, "UCS": solve_with_search,
@@ -210,20 +212,21 @@ def solve_game(algorithm, grid_size, dots_list):
     :param dots_list: list of dots representing the board initial state
     """
     problem = FlowFreeProblem(grid_size, dots_list)
-    display_initial_board(problem)
-    # solvers.get(algorithm)(algorithm, problem, dots_list)
-
+    # display_initial_board(problem)
+    solvers.get(algorithm)(algorithm, problem, dots_list)
 
 
 def main():
     """
     Main function to solve a level with a specific algorithm.
     """
-    algorithm = "A*"
-    grid_size = 6
-    level = 4
+    algorithm = "SAT"
+    grid_size = 14
+    level = 1
     dots_list = get_level_dots(grid_size, level)
+    # dots_list = convert_image_to_dots("problems/levels_pngs/9x9_5.png", grid_size)
     solve_game(algorithm, grid_size, dots_list)
+
 
 if __name__ == "__main__":
     main()

@@ -68,7 +68,7 @@ def get_level_dots(grid_size, level):
                 Dot(1, 4, 'orange', False), Dot(4, 3, 'orange', True)
             ]
 
-        elif level == -2:
+        elif level == 7:
             # just for testing
             return [Dot(0, 0, 'blue', False), Dot(2, 2, 'green', False),
                     Dot(3, 0, 'red', False), Dot(3, 1, 'green', True),
