@@ -4,6 +4,7 @@ from flow_game.dot import Dot
 from main import convert_dots_to_sat_problem
 from solvers.SAT import FlowFreeSAT
 from main import choose_rl_agent
+from main import display_initial_board
 
 import signal
 

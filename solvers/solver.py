@@ -1,39 +1,39 @@
-from solvers import util
+from solvers.util import Stack
+from solvers.util import Queue
+from solvers.util import PriorityQueue
+from solvers.util import Pair
 
 
 # DFS
 def depth_first_search(problem):
     """
-    Search the deepest nodes in the solvers tree first.
-
-    Your solvers algorithm needs to return a list of actions that reaches
-    the goal. Make sure to implement a graph solvers algorithm.
-
-    To get started, you might want to try some of these simple commands to
-    understand the solvers problem that is being passed in:
-
-    print("Start:", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    run the depth first search algorithm on the given problem.
+    :param problem: the problem to solve.
+    :return: a list of actions that reaches the goal state.
     """
-    return general_search(problem, util.Stack())
+    return general_search(problem, Stack())
 
 
 # BFS
 def breadth_first_search(problem):
     """
-    Search the shallowest nodes in the solvers tree first.
+    run the breadth first search algorithm on the given problem.
+    :param problem: the problem to solve.
+    :return: a list of actions that reaches the goal state.
     """
-    return general_search(problem, util.Queue())
+    return general_search(problem, Queue())
 
 
 def general_search(problem, fringe):
     """
-    general solvers algorithm, takes a problem and a fringe and returns a list of actions that reaches.
+    General search algorithm.
+    :param problem: the problem to solve.
+    :param fringe: the data structure to use for the search.
+    :return: a list of actions that reaches the goal state.
     """
     visited = set()
     fringe.push((problem.get_start_state(), []))
-    while not fringe.isEmpty():
+    while not fringe.is_empty():
         state, actions = fringe.pop()
         if problem.is_goal_state(state):
             return actions
@@ -47,12 +47,14 @@ def general_search(problem, fringe):
 
 def uniform_cost_search(problem):
     """
-    Search the node of least total cost first.
+    run the uniform cost search algorithm on the given problem.
+    :param problem: the problem to solve.
+    :return: a list of actions that reaches the goal state.
     """
-    fringe = util.PriorityQueue()
+    fringe = PriorityQueue()
     visited = set()
     fringe.push(Pair(problem.get_start_state(), []), 0)
-    while not fringe.isEmpty():
+    while not fringe.is_empty():
         state, actions = fringe.pop().unpack()
         if problem.is_goal_state(state):
             return actions
@@ -68,20 +70,24 @@ def uniform_cost_search(problem):
 
 def null_heuristic(state):
     """
-    A heuristic function estimates the cost from the current state to the nearest
-    goal in the provided SearchProblem.  This heuristic is trivial.
+    A null heuristic function.
+    :param state: the state to evaluate.
+    :return: 0
     """
     return 0
 
 
 def a_star_search(problem, heuristic=null_heuristic):
     """
-    Search the node that has the lowest combined cost and heuristic first.
+    run the A* search algorithm on the given problem.
+    :param problem: the problem to solve.
+    :param heuristic: the heuristic function to use.
+    :return: a list of actions that reaches the goal state.
     """
-    fringe = util.PriorityQueue()
+    fringe = PriorityQueue()
     visited = set()
     fringe.push(Pair(problem.get_start_state(), []), 0)
-    while not fringe.isEmpty():
+    while not fringe.is_empty():
         state, actions = fringe.pop().unpack()
         if problem.is_goal_state(state):
             return actions
@@ -94,21 +100,6 @@ def a_star_search(problem, heuristic=null_heuristic):
                     fringe.push(Pair(successor, actions + [action]), cost)
     return []
 
-    # class for the solvers algorithms
 
 
-class Pair:
-    def __init__(self, state, actions):
-        self.state = state
-        self.actions = actions
 
-    def unpack(self):
-        return self.state, self.actions
-
-    # Abbreviations
-
-
-bfs = breadth_first_search
-dfs = depth_first_search
-astar = a_star_search
-ucs = uniform_cost_search

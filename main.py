@@ -1,7 +1,6 @@
 import tkinter as tk
 import time
 
-import level_creator
 from flow_game.flow_free_problem import FlowFreeProblem
 from level_creator import get_level_dots
 from solvers import solver
@@ -18,6 +17,12 @@ SOLUTION_FOUND_MESSAGE = "Solution found."
 
 
 def run_search_algorithm(search_algorithm_name, problem):
+    """
+    Run the search algorithm on the given problem.
+    :param search_algorithm_name: name of the search algorithm to run
+    :param problem: the problem to solve
+    :return: a list of actions that reaches the goal state
+    """
     if search_algorithm_name == "DFS":
         return solver.depth_first_search(problem)
     elif search_algorithm_name == "UCS":
@@ -29,7 +34,11 @@ def run_search_algorithm(search_algorithm_name, problem):
 
 
 def choose_rl_agent(agent_name):
-    # TODO run a grid search on the parameters of the agents
+    """
+    Choose the reinforcement learning agent to use.
+    :param agent_name: name of the agent to use
+    :return: the chosen agent
+    """
     if agent_name == "Q learning":
         return QLearningAgent(0.7, 0.9, 0.75)
     elif agent_name == "AQ learning":
@@ -37,6 +46,12 @@ def choose_rl_agent(agent_name):
 
 
 def start_search(problem, algorithm_name):
+    """
+    Start the search algorithm on the given problem.
+    :param problem: the problem to solve
+    :param algorithm_name: the name of the algorithm to use
+    :return: a list of actions that reaches the goal state and the time taken
+    """
     start_time = time.time()
     actions = run_search_algorithm(algorithm_name, problem)
     elapsed_time = time.time() - start_time
@@ -44,6 +59,13 @@ def start_search(problem, algorithm_name):
 
 
 def execute_actions_with_delay(gui, curr_state, actions, index=0):
+    """
+    Execute the actions with a delay to display the moves on the GUI.
+    :param gui: gui object to display the moves
+    :param curr_state: current state of the game
+    :param actions: list of actions to execute
+    :param index: index of the current action
+    """
     if index < len(actions):
         action = actions[index]
         curr_state = curr_state.do_move(action)
@@ -56,17 +78,29 @@ def execute_actions_with_delay(gui, curr_state, actions, index=0):
 
 
 def solve_with_search(algorithm_name, problem, dots_list):
+    """
+    Solve the problem using the search algorithm and display the GUI.
+    :param algorithm_name: name of the algorithm to use
+    :param problem: the problem to solve
+    :param dots_list: list of dots representing the board initial state
+    """
     # Execute the solvers algorithm
     actions, elapsed_time = start_search(problem, algorithm_name)
     display_gui(problem, algorithm_name, actions, elapsed_time)
 
 
 def solve_with_rl(algorithm_name, problem, dots_list):
+    """
+    Solve the problem using the reinforcement learning agent and display the GUI.
+    :param algorithm_name: name of the agent to use
+    :param problem: the problem to solve
+    :param dots_list: list of dots representing the board initial state
+    """
     environment = FlowFreeEnvironment(problem)
     # Execute the solvers algorithm
     agent = choose_rl_agent(algorithm_name)
     # Train the agent
-    agent.train(episodes=5000, environment=environment)
+    agent.train(episodes=10000, environment=environment)
     # Solve a specific level
     initial_state = environment.reset()
     actions = agent.solve(initial_state, environment)
@@ -75,6 +109,11 @@ def solve_with_rl(algorithm_name, problem, dots_list):
 
 
 def convert_dots_to_sat_problem(dots):
+    """
+    Convert the dots list to a SAT problem format.
+    :param dots: list of Dot objects representing the board initial state
+    :return: list of colors and a dictionary representing the board
+    """
     dot_dict = {}
     colors = set()
     for dot in dots:
@@ -85,6 +124,13 @@ def convert_dots_to_sat_problem(dots):
 
 
 def solve_with_sat(algorithm_name, problem, dots_list):
+    """
+    Solve the problem using the SAT solver and display the GUI.
+    :param algorithm_name: name of the algorithm to use
+    :param problem: the problem to solve
+    :param dots_list: list of dots representing the board initial state
+    :return:
+    """
     board_size, dots_array = problem.get_problem_vars()
     colors, initial_board = convert_dots_to_sat_problem(dots_array)
     sat_solver = FlowFreeSAT(board_size, colors, initial_board)
@@ -106,6 +152,10 @@ def solve_with_sat(algorithm_name, problem, dots_list):
 
 
 def display_initial_board(problem):
+    """
+    A function to display the initial board state.
+    :param problem: the problem to display
+    """
     root = tk.Tk()
     board_size = problem.board.board_size
     gui = FlowFreeGUI(root, board_size, board_size)
@@ -118,6 +168,13 @@ def display_initial_board(problem):
 
 
 def display_gui(problem, algorithm_name, actions, elapsed_time):
+    """
+    Display the GUI with the given problem and actions.
+    :param problem: the problem to display
+    :param algorithm_name: name of the algorithm used to solve the problem
+    :param actions: list of actions to execute
+    :param elapsed_time: time taken to solve the problem
+    """
     # Create Tkinter root and GUI only after the solvers algorithm is done
     root = tk.Tk()
     board_size = problem.board.board_size
@@ -138,7 +195,7 @@ def display_gui(problem, algorithm_name, actions, elapsed_time):
 
     root.mainloop()
 
-
+# dictionary of solvers
 solvers = {"A*": solve_with_search, "DFS": solve_with_search,
            "BFS": solve_with_search, "UCS": solve_with_search,
            "SAT": solve_with_sat, "Q learning": solve_with_rl,
@@ -146,17 +203,27 @@ solvers = {"A*": solve_with_search, "DFS": solve_with_search,
 
 
 def solve_game(algorithm, grid_size, dots_list):
+    """
+    Solve the game using the given algorithm.
+    :param algorithm: the algorithm to use
+    :param grid_size: the size of the grid
+    :param dots_list: list of dots representing the board initial state
+    """
     problem = FlowFreeProblem(grid_size, dots_list)
-    solvers.get(algorithm)(algorithm, problem, dots_list)
+    display_initial_board(problem)
+    # solvers.get(algorithm)(algorithm, problem, dots_list)
+
 
 
 def main():
-    algorithm = "SAT"
-    difficulty = "simple"
-    set_number = 4
-    dots_list, board_size = get_level_dots(set_number, difficulty)
-    solve_game(algorithm, board_size, dots_list)
-
+    """
+    Main function to solve a level with a specific algorithm.
+    """
+    algorithm = "A*"
+    grid_size = 6
+    level = 4
+    dots_list = get_level_dots(grid_size, level)
+    solve_game(algorithm, grid_size, dots_list)
 
 if __name__ == "__main__":
     main()

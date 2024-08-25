@@ -24,12 +24,21 @@
 # }
 
 import pycosat
-import tkinter as tk
-from gui import FlowFreeGUI
+from solvers.util import LinkedList
 
 
 class FlowFreeSAT:
+    """
+    FlowFreeSAT class is responsible for solving the Flow Free game using the SAT solver.
+    """
+
     def __init__(self, board_size, colors, initial_board=None):
+        """
+        Constructor for the FlowFreeSAT class.
+        :param board_size: size of the board
+        :param colors: list of colors
+        :param initial_board: dictionary of initial dots
+        """
         self.board_size = board_size
         self.colors = colors
         self.num_colors = len(colors)
@@ -49,6 +58,12 @@ class FlowFreeSAT:
         self.add_initial_board_constraints()
 
     def check_coords(self, r, c):
+        """
+        Check if the coordinates are within the board.
+        :param r: row
+        :param c: column
+        :return: True if the coordinates are within the board, False otherwise
+        """
         return 0 <= r < self.board_size and 0 <= c < self.board_size
 
     # Example above
@@ -85,6 +100,9 @@ class FlowFreeSAT:
     # For example for constraints for cell (1, 0) being 'R' will output :
     # [17], [-18], [-19], [-20]
     def add_initial_board_constraints(self):
+        """
+        Add constraints for the initial board.
+        """
         for (r, c), color in self.initial_board.items():
             for other_color in self.colors:
                 if color == other_color:
@@ -109,6 +127,9 @@ class FlowFreeSAT:
     # ]
 
     def add_endpoint_constraints(self):
+        """
+        Add constraints for the endpoints.
+        """
         for (r, c), color in self.initial_board.items():
             neighbors = self.get_neighbors(r, c)
             neighbor_vars = [self.variables[nr, nc][color] for nr, nc in
@@ -123,6 +144,10 @@ class FlowFreeSAT:
 
     # Every cell is assigned a single color.
     def add_single_color_constraints(self, variables):
+        """
+        Add constraints for single color.
+        :param variables: variables to add constraints
+        """
         for r in range(self.board_size):
             for c in range(self.board_size):
                 if (
@@ -140,6 +165,9 @@ class FlowFreeSAT:
                             self.cnf.append([-color_vars[i], -color_vars[j]])
 
     def add_direction_same_color_constraints(self):
+        """
+        Add constraints for the same color in the same direction.
+        """
         for dv in self.direction_variables:
             for direction in self.direction_variables[dv]:
                 for sub_directions in self.directions[direction]:
@@ -156,6 +184,9 @@ class FlowFreeSAT:
                              dv_color, -neighbor_color])
 
     def completing_direction_neighbors_constraints(self):
+        """
+        Add constraints for the neighbors in the same direction.
+        """
         for dv in self.direction_variables:
             for direction in self.direction_variables[dv]:
                 reverse_direction = self.reverse_directions[direction]
@@ -176,6 +207,9 @@ class FlowFreeSAT:
     # self.direction_variables[(r, c + 1)] and '┘' in \
     # self.direction_variables[(r + 1, c + 1]):
     def add_square_preventing_constraints(self):
+        """
+        Add constraints for the square preventing.
+        """
         for r in range(self.board_size - 1):
             for c in range(self.board_size - 1):
                 if (
@@ -196,6 +230,10 @@ class FlowFreeSAT:
                         ])
 
     def add_cycle_preventing_constraints(self, coordinates):
+        """
+        Add constraints for the cycle preventing.
+        :param coordinates: coordinates to add constraints
+        """
         cycle_cnf = []
         first = True
         for i in range(len(coordinates)):
@@ -213,20 +251,26 @@ class FlowFreeSAT:
                 action = '─'
             else:
                 action = '│'
-            for j in range(1, len(coordinates[i])-1):
-                cycle_cnf.append(-self.direction_variables[coordinates[i][j]][action])
+            for j in range(1, len(coordinates[i]) - 1):
+                cycle_cnf.append(
+                    -self.direction_variables[coordinates[i][j]][action])
 
             if i == 0:
                 cycle_cnf.append(-self.direction_variables[coordinates[i][
-                    len(coordinates[i])-1]]['┐'])
+                    len(coordinates[i]) - 1]]['┐'])
             if i == len(coordinates) - 1:
                 cycle_cnf.append(-self.direction_variables[coordinates[i][
-                    len(coordinates[i])-1]]['┘'])
+                    len(coordinates[i]) - 1]]['┘'])
 
         self.cnf.append(cycle_cnf)
 
-
     def get_neighbors(self, r, c):
+        """
+        Get the neighbors of the cell.
+        :param r: row
+        :param c: column
+        :return: list of neighbors
+        """
         neighbors = []
         if r > 0: neighbors.append((r - 1, c))  # Up
         if r < self.board_size - 1: neighbors.append((r + 1, c))  # Down
@@ -244,42 +288,25 @@ class FlowFreeSAT:
         # self.add_cycle_preventing_constraints()
         # Solve the SAT problem
         is_solution_without_cycle = False
-        while(not is_solution_without_cycle):
+        solution = None
+        while not is_solution_without_cycle:
             solution = pycosat.solve(self.cnf)
             if solution == "UNSAT":
                 return solution
             solution_board = self.convert_sol_to_board(solution)
-            is_solution_without_cycle, coordinates = analyze_solution(
+            is_solution_without_cycle, coordinates = check_no_cycles(
                 solution_board,
                 dots_list)
             if coordinates:
                 self.add_cycle_preventing_constraints(coordinates)
         return solution
 
-    def print_board(self):
-        board = [['.' for _ in range(self.board_size)] for _ in
-                 range(self.board_size)]
-        for (r, c), color in self.initial_board.items():
-            board[r][c] = color
-        for row in board:
-            print(' '.join(row))
-
-    def print_solution(self, solution):
-        board = [['.' for _ in range(self.board_size)] for _ in
-                 range(self.board_size)]
-
-        for r in range(self.board_size):
-            for c in range(self.board_size):
-                for color in self.colors:
-                    var = self.variables[(r, c)][color]
-                    if var in solution:
-                        board[r][c] = color
-
-        print("\nSolution Board:")
-        for row in board:
-            print(' '.join(row))
-
     def convert_sol_to_board(self, solution):
+        """
+        Convert the solution to a 2d list board.
+        :param solution: solution to convert
+        :return: solution as 2D list
+        """
         board = [['.' for _ in range(self.board_size)] for _ in
                  range(self.board_size)]
 
@@ -290,6 +317,7 @@ class FlowFreeSAT:
                     if var in solution:
                         board[r][c] = color
         return board
+
 
 def is_path_connected(board, start_dot, end_dot):
     # Implement a basic DFS to check if there's a path from start to end
@@ -310,7 +338,14 @@ def is_path_connected(board, start_dot, end_dot):
                     stack.append((nx, ny))
     return False
 
+
 def validate_sat_solution(sat_solution, dots_list):
+    """
+    Validate the SAT solution.
+    :param sat_solution: solution to validate
+    :param dots_list: list of dots representing the initial board
+    :return: True if the solution is valid, False otherwise
+    """
     for i in range(0, len(dots_list), 2):
         start_dot = dots_list[i]
         end_dot = dots_list[i + 1]
@@ -345,6 +380,11 @@ def validate_sat_solution(sat_solution, dots_list):
     # }
 
 def group_by_row(coordinate_list):
+    """
+    Group the coordinates by row.
+    :param coordinate_list: list of coordinates
+    :return: grouped coordinates by row
+    """
     if not coordinate_list:
         return []
 
@@ -368,9 +408,14 @@ def group_by_row(coordinate_list):
     return grouped_rows
 
 
-
-
-def analyze_solution(board, dots_list):
+def check_no_cycles(board, dots_list):
+    """
+    Check if there are no cycles in the board.
+    :param board: board to check
+    :param dots_list: list of dots representing the initial board
+    :return: True, None if there are no cycles, False,
+    coordinates of the cycle otherwise
+    """
     total_cells = len(board) * len(board[0])
     total_path_cells = 0
     visited = set()
@@ -378,18 +423,15 @@ def analyze_solution(board, dots_list):
     paths = []  # List to store paths
 
     # Find paths based on the dots_list
-    for i in range(0, len(dots_list), 2):
-        start_dot = dots_list[i]
-        goal_dot = dots_list[i + 1]
-
-        start_x, start_y = start_dot.get_x(), start_dot.get_y()
-        goal_x, goal_y = goal_dot.get_x(), goal_dot.get_y()
-        color = start_dot.get_color()
-
-        path = find_path(board, start_x, start_y, color, visited)
-        path_cells = path.size
-        total_path_cells += path_cells
-        paths.append(path)  # Add path to paths list
+    for i in range(0, len(dots_list)):
+        if not dots_list[i].get_is_goal():
+            start_dot = dots_list[i]
+            start_x, start_y = start_dot.get_x(), start_dot.get_y()
+            color = start_dot.get_color()
+            path = find_path(board, start_x, start_y, color, visited)
+            path_cells = path.size
+            total_path_cells += path_cells
+            paths.append(path)  # Add path to paths list
 
         last_node = path.get_last_node()
         # Check if the last node matches the goal
@@ -413,6 +455,15 @@ def analyze_solution(board, dots_list):
 
 
 def find_path(board, start_x, start_y, color, visited):
+    """
+    Find the path in the board.
+    :param board: board to find the path
+    :param start_x: start x coordinate
+    :param start_y: start y coordinate
+    :param color: color of the path
+    :param visited: set of visited coordinates
+    :return: path
+    """
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     path = LinkedList()
     x, y = start_x, start_y
@@ -430,59 +481,9 @@ def find_path(board, start_x, start_y, color, visited):
                     x, y = nx, ny
                     found_next = True
                     break
-
         if not found_next:
             break
-
     return path
 
 
-
-class Node:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.next = None
-
-
-class LinkedList:
-    def __init__(self):
-        self.head = None
-        self.size = 0
-        self.tail = None
-
-    def append(self, x, y):
-        new_node = Node(x, y)
-        if not self.head:
-            self.head = new_node
-        else:
-            current = self.head
-            while current.next:
-                current = current.next
-            current.next = new_node
-        self.tail = new_node
-        self.size += 1
-
-    def display(self):
-        current = self.head
-        path = []
-        current_row = []
-        current_row_num = current.x if current else None
-
-        while current:
-            if current.x == current_row_num:
-                current_row.append((current.x, current.y))
-            else:
-                path.append(current_row)
-                current_row = [(current.x, current.y)]
-                current_row_num = current.x
-            current = current.next
-
-        if current_row:
-            path.append(current_row)
-
-        return path
-
-    def get_last_node(self):
-        return self.tail
 
