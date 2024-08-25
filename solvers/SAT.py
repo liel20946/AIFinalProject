@@ -1,28 +1,3 @@
-# Example of how the self.variables looks like if the colors are (R, G, B,
-#                                                                 Y) and the
-# board is 4x4
-# {
-#     (0, 0): {'R': 1, 'G': 2, 'B': 3, 'Y': 4},
-#     (0, 1): {'R': 5, 'G': 6, 'B': 7, 'Y': 8},
-#     (0, 2): {'R': 9, 'G': 10, 'B': 11, 'Y': 12},
-#     (0, 3): {'R': 13, 'G': 14, 'B': 15, 'Y': 16},
-#
-#     (1, 0): {'R': 17, 'G': 18, 'B': 19, 'Y': 20},
-#     (1, 1): {'R': 21, 'G': 22, 'B': 23, 'Y': 24},
-#     (1, 2): {'R': 25, 'G': 26, 'B': 27, 'Y': 28},
-#     (1, 3): {'R': 29, 'G': 30, 'B': 31, 'Y': 32},
-#
-#     (2, 0): {'R': 33, 'G': 34, 'B': 35, 'Y': 36},
-#     (2, 1): {'R': 37, 'G': 38, 'B': 39, 'Y': 40},
-#     (2, 2): {'R': 41, 'G': 42, 'B': 43, 'Y': 44},
-#     (2, 3): {'R': 45, 'G': 46, 'B': 47, 'Y': 48},
-#
-#     (3, 0): {'R': 49, 'G': 50, 'B': 51, 'Y': 52},
-#     (3, 1): {'R': 53, 'G': 54, 'B': 55, 'Y': 56},
-#     (3, 2): {'R': 57, 'G': 58, 'B': 59, 'Y': 60},
-#     (3, 3): {'R': 61, 'G': 62, 'B': 63, 'Y': 64},
-# }
-
 import pycosat
 from solvers.util import LinkedList
 
@@ -42,7 +17,7 @@ class FlowFreeSAT:
         self.board_size = board_size
         self.colors = colors
         self.num_colors = len(colors)
-        self.variables = {}
+        self.color_variables = {}
         self.direction_variables = {}
         self.directions = {'─': [(0, -1), (0, 1)], '│': [(-1, 0), (1, 0)],
                            '┘': [(-1, 0), (0, -1)], '└': [(-1, 0), (0, 1)],
@@ -51,10 +26,7 @@ class FlowFreeSAT:
                                    '┐': '└', '┌': '┘'}
         self.cnf = []
         self.initial_board = initial_board or {}
-
-        # Initialize variables for each cell and color
         self.initialize_variables()
-        # Add initial board constraints
         self.add_initial_board_constraints()
 
     def check_coords(self, r, c):
@@ -66,18 +38,12 @@ class FlowFreeSAT:
         """
         return 0 <= r < self.board_size and 0 <= c < self.board_size
 
-    # Example above
-    def initialize_variables(self):
-        var_id = 1
-        for r in range(self.board_size):
-            for c in range(self.board_size):
-                self.variables[(r, c)] = {}
-                for color in self.colors:
-                    self.variables[(r, c)][color] = var_id
-                    var_id += 1
-
-        # Initialize variables for each cell and direction
-
+    def initialize_direction_variables(self, var_id):
+        """
+        Initialize the direction variables.
+        :param var_id: variable id
+        :return: current variable id
+        """
         for r in range(self.board_size):
             for c in range(self.board_size):
                 if (r, c) not in self.initial_board:
@@ -95,6 +61,29 @@ class FlowFreeSAT:
                                 direction] = var_id
                             var_id += 1
 
+    def initialize_color_variables(self, var_id):
+        """
+        Initialize the color variables.
+        :param var_id: variable id
+        :return: current variable id
+        """
+        for r in range(self.board_size):
+            for c in range(self.board_size):
+                self.color_variables[(r, c)] = {}
+                for color in self.colors:
+                    self.color_variables[(r, c)][color] = var_id
+                    var_id += 1
+        return var_id
+
+    def initialize_variables(self):
+        """
+        Initialize the color and direction variables.
+        :return:
+        """
+        var_id = 1
+        var_id = self.initialize_color_variables(var_id)
+        self.initialize_direction_variables(var_id)
+
     # this method ensures that any cell with a predefined color in the initial board
     # is constrained to that color, and that no other colors are allowed in that cell.
     # For example for constraints for cell (1, 0) being 'R' will output :
@@ -106,25 +95,10 @@ class FlowFreeSAT:
         for (r, c), color in self.initial_board.items():
             for other_color in self.colors:
                 if color == other_color:
-                    self.cnf.append([self.variables[(r, c)][color]])
+                    self.cnf.append([self.color_variables[(r, c)][color]])
                 else:
-                    self.cnf.append([-self.variables[(r, c)][other_color]])
-
-    # endpoint (a cell with a predefined color in the initial board) must be connected to
-    # exactly one of its neighboring cells of the same color
-    # assume : the cell (1, 0) with color 'R', it's neighbors and vaitables
-    # id for 'R': (0, 0): 1, (2, 0): 33, (1, 1): 21
-    # CNF Clauses
-    # [
-    #     [1, 33, 21],  # At least one neighbor is 'R'
-    #     [-1, -33],
-    #     # At most one neighbor is 'R' (not both (0, 0) and (2, 0) can be 'R')
-    #     [-1, -21],
-    #     # At most one neighbor is 'R' (not both (0, 0) and (1, 1) can be 'R')
-    #     [-33, -21],
-    #     # At most one neighbor is 'R' (not both (2, 0) and (1, 1) can be 'R')
-    #     # Similar clauses would be added for other endpoints like (0, 3), (0, 0), (1, 3), etc.
-    # ]
+                    self.cnf.append([-self.color_variables[(r,
+                                                            c)][other_color]])
 
     def add_endpoint_constraints(self):
         """
@@ -132,8 +106,8 @@ class FlowFreeSAT:
         """
         for (r, c), color in self.initial_board.items():
             neighbors = self.get_neighbors(r, c)
-            neighbor_vars = [self.variables[nr, nc][color] for nr, nc in
-                             neighbors if (nr, nc) in self.variables]
+            neighbor_vars = [self.color_variables[nr, nc][color] for nr, nc in
+                             neighbors if (nr, nc) in self.color_variables]
 
             # Exactly one neighbor must match the cell's color
             self.cnf.append(neighbor_vars)  # At least one neighbor
@@ -158,7 +132,6 @@ class FlowFreeSAT:
 
                     # Each cell must have at least one color
                     self.cnf.append(color_vars)
-
                     # No cell can have more than one color
                     for i in range(len(color_vars)):
                         for j in range(i + 1, len(color_vars)):
@@ -173,9 +146,10 @@ class FlowFreeSAT:
                 for sub_directions in self.directions[direction]:
                     x, y = dv[0] + sub_directions[0], dv[1] + sub_directions[1]
                     neighbor_coord = (x, y)
-                    for color in self.variables[neighbor_coord]:
-                        dv_color = self.variables[dv][color]
-                        neighbor_color = self.variables[neighbor_coord][color]
+                    for color in self.color_variables[neighbor_coord]:
+                        dv_color = self.color_variables[dv][color]
+                        neighbor_color = self.color_variables[neighbor_coord][
+                            color]
                         self.cnf.append(
                             [-self.direction_variables[dv][direction],
                              -dv_color, neighbor_color])
@@ -195,17 +169,14 @@ class FlowFreeSAT:
                     neighbor_coord = (x, y)
                     if not self.check_coords(x, y):
                         continue
-                    for color in self.variables[neighbor_coord]:
-                        dv_color = self.variables[dv][color]
-                        neighbor_color = self.variables[neighbor_coord][color]
+                    for color in self.color_variables[neighbor_coord]:
+                        dv_color = self.color_variables[dv][color]
+                        neighbor_color = self.color_variables[neighbor_coord][
+                            color]
                         self.cnf.append(
                             [-self.direction_variables[dv][direction],
                              -dv_color, -neighbor_color])
 
-    # and '└' in
-    # self.direction_variables[(r + 1, c)] and '┐' in \
-    # self.direction_variables[(r, c + 1)] and '┘' in \
-    # self.direction_variables[(r + 1, c + 1]):
     def add_square_preventing_constraints(self):
         """
         Add constraints for the square preventing.
@@ -237,10 +208,10 @@ class FlowFreeSAT:
         cycle_cnf = []
         first = True
         for i in range(len(coordinates)):
-            if i==0 and first:
-                cycle_cnf.append(-self.direction_variables[coordinates[0][
-                    0]]['┌'])
-                first= False
+            if i == 0 and first:
+                cycle_cnf.append(
+                    -self.direction_variables[coordinates[0][0]]['┌'])
+                first = False
             elif i == len(coordinates) - 1:
                 cycle_cnf.append(
                     -self.direction_variables[coordinates[i][0]]['└'])
@@ -278,15 +249,23 @@ class FlowFreeSAT:
         if c < self.board_size - 1: neighbors.append((r, c + 1))  # Right
         return neighbors
 
-    def solve(self, dots_list):
-        # Add constraints to CNF
+    def add_constraints(self):
+        """
+        Add constraints for the SAT solver.
+        """
         self.add_endpoint_constraints()
-        self.add_single_color_constraints(self.variables)
+        self.add_single_color_constraints(self.color_variables)
         self.add_single_color_constraints(self.direction_variables)
         self.add_direction_same_color_constraints()
         self.completing_direction_neighbors_constraints()
-        # self.add_cycle_preventing_constraints()
-        # Solve the SAT problem
+
+    def solve(self, dots_list):
+        """
+        Solve the Flow Free game using the SAT solver.
+        :param dots_list: list of the starting dots
+        :return: solution
+        """
+        self.add_constraints()
         is_solution_without_cycle = False
         solution = None
         while not is_solution_without_cycle:
@@ -313,14 +292,20 @@ class FlowFreeSAT:
         for r in range(self.board_size):
             for c in range(self.board_size):
                 for color in self.colors:
-                    var = self.variables[(r, c)][color]
+                    var = self.color_variables[(r, c)][color]
                     if var in solution:
                         board[r][c] = color
         return board
 
 
 def is_path_connected(board, start_dot, end_dot):
-    # Implement a basic DFS to check if there's a path from start to end
+    """
+    Check if the path is connected.
+    :param board: board to check
+    :param start_dot: start dot of the path
+    :param end_dot: end dot of the path
+    :return: True if the path is connected, False otherwise
+    """
     visited = set()
     stack = [(start_dot.get_x(), start_dot.get_y())]
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
@@ -353,31 +338,6 @@ def validate_sat_solution(sat_solution, dots_list):
             return False
     return True
 
-    # Example initial board setup
-    # board_size = 4
-    # colors = ['R', 'G', 'B', 'Y']
-    # # Option 1
-    # initial_board = {
-    #     (0, 0): 'R',
-    #     (0, 3): 'R',
-    #     (1, 0): 'G',
-    #     (1, 3): 'G',
-    #     (2, 0): 'B',
-    #     (2, 3): 'B',
-    #     (3, 0): 'Y',
-    #     (3, 3): 'Y'
-    # }
-    # # Option 2 - no solution
-    # initial_board = {
-    #     (1, 0): 'R',
-    #     (0, 3): 'R',
-    #     (0, 0): 'G',
-    #     (1, 3): 'G',
-    #     (2, 0): 'B',
-    #     (2, 3): 'B',
-    #     (3, 0): 'Y',
-    #     (3, 3): 'Y'
-    # }
 
 def group_by_row(coordinate_list):
     """
@@ -419,7 +379,6 @@ def check_no_cycles(board, dots_list):
     total_cells = len(board) * len(board[0])
     total_path_cells = 0
     visited = set()
-
     paths = []  # List to store paths
 
     # Find paths based on the dots_list
@@ -432,12 +391,6 @@ def check_no_cycles(board, dots_list):
             path_cells = path.size
             total_path_cells += path_cells
             paths.append(path)  # Add path to paths list
-
-        last_node = path.get_last_node()
-        # Check if the last node matches the goal
-        # if last_node.x != goal_x or last_node.y != goal_y:
-        #     print(f"Error: Path for color {color} does not end at the goal: {goal_x}, {goal_y}")
-        #     print(f"Path ended at: {last_node.x}, {last_node.y} instead")
 
     leftovers = []
     # Identify leftover cells that are not part of any path

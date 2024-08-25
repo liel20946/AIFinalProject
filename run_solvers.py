@@ -10,12 +10,15 @@ import signal
 
 from solvers.flow_free_env import FlowFreeEnvironment
 
-
-
+PROBLEMS_DIR_NAME = "problems"
+PROBLEM_FILE_PREFIX = "levels"
+SAT_FAILED = "UNSAT"
+LINE_FORMAT_ERROR = "Unexpected line format"
+MIN_GRID_SIZE = 5
+MAX_GRID_SIZE = 10
 
 class TimeoutException(Exception):
     pass
-
 
 def timeout_handler(signum, frame):
     raise TimeoutException()
@@ -40,9 +43,9 @@ def load_levels_from_file(filename):
     levels = []
     with open(filename, 'r') as file:
         for line in file.readlines():
-            line = line.strip()  # Remove leading/trailing whitespace
+            line = line.strip()
             if not line.startswith("[") or not line.endswith("]"):
-                print(f"Unexpected line format: {line}")
+                print(f"{LINE_FORMAT_ERROR}: {line}")
                 continue
 
             # Remove the outer brackets
@@ -76,12 +79,13 @@ def load_levels_from_file(filename):
     return levels
 
 
-def simulate_algorithms_for_grid_size(grid_size):
-    # open the problems file
-    levels = load_levels_from_file(f'problems/levels-{grid_size}.txt')
-    # simulate_search_algorithm(levels, grid_size)
-    # simulate_q_learning_solver(levels, grid_size)
-    simulate_sat_solver(levels, grid_size)
+def print_results(algorithm, problems_not_passed_lst,
+                  num_of_passed_problems, levels):
+    print(f'{algorithm} passed {num_of_passed_problems}/{len(levels)}')
+    if problems_not_passed_lst:
+        print(f'problems not passed: {problems_not_passed_lst}')
+    print('---------------------------------------------------')
+
 
 
 def simulate_sat_solver(levels, grid_size):
@@ -91,31 +95,24 @@ def simulate_sat_solver(levels, grid_size):
         colors, initial_board = convert_dots_to_sat_problem(level)
         sat_solver = FlowFreeSAT(grid_size, colors, initial_board)
         solution = sat_solver.solve(level)
-        if solution == 'UNSAT':
+        if solution == SAT_FAILED:
             problems_not_passed_lst.append(level_num)
             continue
         num_of_passed_problems += 1
+    print_results("SAT", problems_not_passed_lst, num_of_passed_problems, levels)
 
-    print(f'SAT passed {num_of_passed_problems}/{len(levels)}')
-    if problems_not_passed_lst:
-        print(f'problems not passed: {problems_not_passed_lst}')
-    print('---------------------------------------------------')
 
 
 def simulate_q_learning_solver(levels, grid_size):
     q_algorithms = ["Q learning", "AQ learning"]
-    results = {algo: 0 for algo in q_algorithms}
     for algo in q_algorithms:
         problems_not_passed_lst = []
         problems_passed_counter = 0
         for level_num, level in enumerate(levels):
             problem = FlowFreeProblem(grid_size, level)
             environment = FlowFreeEnvironment(problem)
-            # Execute the solvers algorithm
             agent = choose_rl_agent(algo)
-            # Train the agent
             agent.train(episodes=5000, environment=environment)
-            # Solve a specific level
             initial_state = environment.reset()
             actions = agent.solve(initial_state, environment)
             problem_state = problem.get_start_state()
@@ -126,11 +123,7 @@ def simulate_q_learning_solver(levels, grid_size):
             else:
                 problems_not_passed_lst.append(level_num)
 
-        results[algo] = problems_passed_counter
-        print(f'{algo} passed {problems_passed_counter}/{len(levels)}')
-        if problems_not_passed_lst:
-            print(f'problems not passed: {problems_not_passed_lst}')
-        print('---------------------------------------------------')
+        print_results(algo, problems_not_passed_lst, problems_passed_counter)
 
 
 def solve_search_problem(algo, problem_dots, grid_size):
@@ -157,16 +150,40 @@ def simulate_search_algorithm(levels, grid_size):
             else:
                 problems_not_passed_lst.append(level_num)
         results[algo] = problems_passed_counter
-        # print number of passed problems for each algorithm.
-        # also print the problems that did not pass.
-        print(f'{algo} passed {problems_passed_counter}/{len(levels)}')
-        if problems_not_passed_lst:
-            print(f'problems not passed: {problems_not_passed_lst}')
-        print('---------------------------------------------------')
 
+        print_results(algo, problems_not_passed_lst,
+                      problems_passed_counter, levels)
+
+solvers = {"Search": simulate_search_algorithm,
+           "SAT": simulate_sat_solver, "Q learning":
+               simulate_q_learning_solver}
+
+
+def simulate_all(grid_size, levels):
+    for solver_type in solvers.keys():
+            solvers.get(solver_type)(levels, grid_size)
+
+def simulate_algorithms_for_grid_size(algorithm_type, grid_size,levels):
+    if algorithm_type == "All":
+        simulate_all(grid_size,levels)
+    else:
+        solvers.get(algorithm_type)(levels, grid_size)
 
 if __name__ == "__main__":
-    for size in range(5, 6):
-        print("Simulating algorithms for grid size:", size)
-        simulate_algorithms_for_grid_size(size)
-        print()
+    # for size in range(MIN_GRID_SIZE, MAX_GRID_SIZE):
+    #     print("Simulating algorithms for grid size:", size)
+    #     levels = load_levels_from_file(f'{PROBLEMS_DIR_NAME}/'
+    #                                    f'{PROBLEM_FILE_PREFIX}-{size}.txt')
+    #     algorithm_type = "Search"
+    #     simulate_algorithms_for_grid_size(algorithm_type, size, levels)
+    #     print()
+
+    # for testing ##
+    grid_size = 6
+    levels = load_levels_from_file(f'{PROBLEMS_DIR_NAME}/'
+                                    f'{PROBLEM_FILE_PREFIX}-{grid_size}.txt')
+    for level in levels:
+        problem = FlowFreeProblem(grid_size, level)
+        display_initial_board(problem)
+
+
