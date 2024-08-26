@@ -79,7 +79,6 @@ class QLearningAgent:
         """
         win_counter = 0
         for episode in range(episodes):
-            print(f"Episode {episode + 1}")
             state = environment.reset()
             done = False
             while not done:

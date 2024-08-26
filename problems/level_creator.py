@@ -3,6 +3,7 @@ import random
 import webcolors
 from flow_game.dot import Dot
 
+PROBLEMS_DIR_NAME = "problems//levels_pngs"
 
 def closest_color(requested_color):
     """
@@ -53,7 +54,7 @@ def round_color(rgb_color, round_to=10):
     return tuple((round(channel / round_to) * round_to) for channel in rgb_color)
 
 
-def convert_image_to_dots(image_path, grid_size):
+def create_level(grid_size, level_number):
     """
     Convert an image to a list of Dot objects.
     :param image_path: path to the image
@@ -61,6 +62,7 @@ def convert_image_to_dots(image_path, grid_size):
     :return: list of Dot objects
     """
     # Load the image
+    image_path = f'{PROBLEMS_DIR_NAME}//{grid_size}x{grid_size}_{level_number}.png'
     image = cv2.imread(image_path)
     # Convert the image to RGB (OpenCV loads images in BGR by default)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

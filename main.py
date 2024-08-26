@@ -2,8 +2,7 @@ import tkinter as tk
 import time
 
 from flow_game.flow_free_problem import FlowFreeProblem
-from problems.image_to_dots import convert_image_to_dots
-from level_creator import get_level_dots
+from problems.level_creator import create_level
 from solvers import solver
 from solvers.SAT import FlowFreeSAT
 from solvers.q_learning_agent import QLearningAgent
@@ -223,8 +222,7 @@ def main():
     algorithm = "SAT"
     grid_size = 14
     level = 1
-    dots_list = get_level_dots(grid_size, level)
-    # dots_list = convert_image_to_dots("problems/levels_pngs/9x9_5.png", grid_size)
+    dots_list = create_level(grid_size, level)
     solve_game(algorithm, grid_size, dots_list)
 
 

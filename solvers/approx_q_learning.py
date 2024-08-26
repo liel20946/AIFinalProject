@@ -114,7 +114,6 @@ class ApproxQLearningAgent:
         :param environment: environment to train on
         """
         for episode in range(episodes):
-            print(f"Episode {episode + 1}")
             state = environment.reset()
             done = False
             while not done:

@@ -3,14 +3,12 @@ from main import run_search_algorithm
 from main import convert_dots_to_sat_problem
 from solvers.SAT import FlowFreeSAT
 from main import choose_rl_agent
-from problems.image_to_dots import convert_image_to_dots
+from problems.level_creator import create_level
 
 
 import signal
 
 from solvers.flow_free_env import FlowFreeEnvironment
-
-PROBLEMS_DIR_NAME = "problems//levels_pngs"
 
 SAT_FAILED = "UNSAT"
 LINE_FORMAT_ERROR = "Unexpected line format"
@@ -68,25 +66,23 @@ def load_levels(grid_size):
     # list of lists where each sublist represents a level
     loaded_levels = []
     for i in range(NUMBER_OF_LEVELS_PER_GRID_SIZE):
-        level = convert_image_to_dots(f'{PROBLEMS_DIR_NAME}/'
-                              f'{grid_size}x{grid_size}_{i+1}.png',
-                                      grid_size)
+        level = create_level(grid_size, i+1)
         loaded_levels.append(level)
 
     return loaded_levels
 
 
 def print_results(algorithm, problems_not_passed_lst,
-                  num_of_passed_problems, levels):
+                  num_of_passed_problems, total_levels):
     """
     Print the results of the algorithm.
     :param algorithm: name of the algorithm
     :param problems_not_passed_lst: list of problems not passed
     :param num_of_passed_problems: number of problems passed
-    :param levels: list of levels
+    :param total_levels: number of levels that were tested
     :return:
     """
-    print(f'{algorithm} passed {num_of_passed_problems}/{len(levels)}')
+    print(f'{algorithm} passed {num_of_passed_problems}/{total_levels}')
     if problems_not_passed_lst:
         print(f'problems not passed: {problems_not_passed_lst}')
     print('---------------------------------------------------')
@@ -109,7 +105,7 @@ def simulate_sat_solver(levels, grid_size):
             problems_not_passed_lst.append(level_num + 1)
             continue
         num_of_passed_problems += 1
-    print_results("SAT", problems_not_passed_lst, num_of_passed_problems, levels)
+    print_results("SAT", problems_not_passed_lst, num_of_passed_problems, len(levels))
 
 
 
@@ -138,7 +134,7 @@ def simulate_q_learning_solver(levels, grid_size):
             else:
                 problems_not_passed_lst.append(level_num + 1)
 
-        print_results(algo, problems_not_passed_lst, problems_passed_counter)
+        print_results(algo, problems_not_passed_lst, problems_passed_counter, len(levels))
 
 
 def solve_search_problem(algo, problem_dots, grid_size):
@@ -179,7 +175,7 @@ def simulate_search_algorithm(levels, grid_size):
         results[algo] = problems_passed_counter
 
         print_results(algo, problems_not_passed_lst,
-                      problems_passed_counter, levels)
+                      problems_passed_counter, len(levels))
 
 solvers = {"Search": simulate_search_algorithm,
            "SAT": simulate_sat_solver, "Q learning":
@@ -211,7 +207,7 @@ if __name__ == "__main__":
     for size in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
         print("Simulating algorithms for grid size:", size)
         levels = load_levels(size)
-        algorithm_type = "SAT"
+        algorithm_type = "Q learning"
         simulate_algorithms_for_grid_size(algorithm_type, size, levels)
         print()
 
