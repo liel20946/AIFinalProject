@@ -220,16 +220,16 @@ if __name__ == "__main__":
     # create_sat_results_bar_plot(sat_results)
 
     # Search results
-    # create_single_search_algo_bar_plot("BFS", search_results)
-    # create_single_search_algo_bar_plot("DFS", search_results)
-    # create_single_search_algo_bar_plot("UCS", search_results)
-    # create_single_search_algo_bar_plot("A*", search_results)
-    # create_expended_nodes_bar_plot("BFS", search_results)
-    # create_expended_nodes_bar_plot("DFS", search_results)
-    # create_expended_nodes_bar_plot("UCS", search_results)
-    # create_expended_nodes_bar_plot("A*", search_results)
-    # create_bar_plot_for_all_search_algorithms(search_results)
-    # create_expended_nodes_bar_plot_for_all_search_algorithms(search_results)
+    create_single_search_algo_bar_plot("BFS", search_results)
+    create_single_search_algo_bar_plot("DFS", search_results)
+    create_single_search_algo_bar_plot("UCS", search_results)
+    create_single_search_algo_bar_plot("A*", search_results)
+    create_expended_nodes_bar_plot("BFS", search_results)
+    create_expended_nodes_bar_plot("DFS", search_results)
+    create_expended_nodes_bar_plot("UCS", search_results)
+    create_expended_nodes_bar_plot("A*", search_results)
+    create_bar_plot_for_all_search_algorithms(search_results)
+    create_expended_nodes_bar_plot_for_all_search_algorithms(search_results)
 
 
 
