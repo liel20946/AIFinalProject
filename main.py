@@ -55,6 +55,7 @@ def start_search(problem, algorithm_name):
     start_time = time.time()
     actions = run_search_algorithm(algorithm_name, problem)
     elapsed_time = time.time() - start_time
+    print(f"result(time,expended nodes): {elapsed_time},{problem.expanded}")
     return actions, elapsed_time
 
 
@@ -219,10 +220,11 @@ def main():
     """
     Main function to solve a level with a specific algorithm.
     """
-    algorithm = "SAT"
-    grid_size = 14
-    level = 1
+    algorithm = "A*"
+    grid_size = 10
+    level = 10
     dots_list = create_level(grid_size, level)
+    print(f'A* algorithm grid {grid_size} level {level}:\n')
     solve_game(algorithm, grid_size, dots_list)
 
 

@@ -4,17 +4,20 @@ from main import convert_dots_to_sat_problem
 from solvers.SAT import FlowFreeSAT
 from main import choose_rl_agent
 from problems.level_creator import create_level
-
-
 import signal
-
 from solvers.flow_free_env import FlowFreeEnvironment
+import pandas as pd
+import time
 
 SAT_FAILED = "UNSAT"
 LINE_FORMAT_ERROR = "Unexpected line format"
 NUMBER_OF_LEVELS_PER_GRID_SIZE = 10
-MIN_GRID_SIZE = 5
-MAX_GRID_SIZE = 14
+MIN_GRID_SIZE = 10
+MAX_GRID_SIZE = 10
+TIMEOUT = 180
+
+sat_results = pd.DataFrame(columns=['grid size','level', 'time'])
+search_results = pd.DataFrame(columns=['grid size', 'level', 'time', 'expended nodes', 'algorithm'])
 
 class TimeoutException(Exception):
     """
@@ -89,37 +92,42 @@ def print_results(algorithm, problems_not_passed_lst,
 
 
 
-def simulate_sat_solver(levels, grid_size):
+def evaluate_sat_solver(levels_list, grid_size):
     """
-    Simulate the SAT solver on the given levels.
-    :param levels: list of levels
+    Evaluate the SAT solver on the given levels.
+    :param levels_list: list of levels
     :param grid_size: size of the grid
     """
+    global sat_results
     num_of_passed_problems = 0
     problems_not_passed_lst = []
-    for level_num, level in enumerate(levels):
+
+    for level_num, level in enumerate(levels_list):
         colors, initial_board = convert_dots_to_sat_problem(level)
         sat_solver = FlowFreeSAT(grid_size, colors, initial_board)
+        # start timer
+        start_time = time.time()
         solution = sat_solver.solve(level)
+        elapsed_time = time.time() - start_time
+        sat_results.loc[len(sat_results)] = [grid_size, level_num + 1, elapsed_time]
         if solution == SAT_FAILED:
             problems_not_passed_lst.append(level_num + 1)
             continue
         num_of_passed_problems += 1
-    print_results("SAT", problems_not_passed_lst, num_of_passed_problems, len(levels))
+    print_results("SAT", problems_not_passed_lst, num_of_passed_problems, len(levels_list))
 
 
-
-def simulate_q_learning_solver(levels, grid_size):
+def evaluate_q_learning_solver(levels_list, grid_size):
     """
-    Simulate the Q learning solver on the given levels.
-    :param levels: list of levels
+    Evaluate the Q learning solver on the given levels.
+    :param levels_list: list of levels
     :param grid_size: size of the grid
     """
     q_algorithms = ["Q learning", "AQ learning"]
     for algo in q_algorithms:
         problems_not_passed_lst = []
         problems_passed_counter = 0
-        for level_num, level in enumerate(levels):
+        for level_num, level in enumerate(levels_list):
             problem = FlowFreeProblem(grid_size, level)
             environment = FlowFreeEnvironment(problem)
             agent = choose_rl_agent(algo)
@@ -134,7 +142,7 @@ def simulate_q_learning_solver(levels, grid_size):
             else:
                 problems_not_passed_lst.append(level_num + 1)
 
-        print_results(algo, problems_not_passed_lst, problems_passed_counter, len(levels))
+        print_results(algo, problems_not_passed_lst, problems_passed_counter, len(levels_list))
 
 
 def solve_search_problem(algo, problem_dots, grid_size):
@@ -146,70 +154,92 @@ def solve_search_problem(algo, problem_dots, grid_size):
     :return: the goal state of the problem
     """
     problem = FlowFreeProblem(grid_size, problem_dots)
-    actions = run_with_timeout(3, run_search_algorithm, algo, problem)
+    actions = run_with_timeout(TIMEOUT, run_search_algorithm, algo, problem)
     problem_state = problem.get_start_state()
-    if actions is None:
-        return problem_state
-    for action in actions:
-        problem_state = problem_state.do_move(action)
-    return problem_state
+    if actions is not None:
+        for action in actions:
+            problem_state = problem_state.do_move(action)
+    return problem_state, problem.expanded
 
 
-def simulate_search_algorithm(levels, grid_size):
+def evaluate_search_algorithm(levels_list, grid_size):
     """
-    Simulate the search algorithm on the given levels.
-    :param levels: list of levels
+    Evaluate the search algorithm on the given levels.
+    :param levels_list: list of levels
     :param grid_size: size of the grid
     """
     search_algorithms = ["BFS", "DFS", "UCS", "A*"]
-    results = {algo: 0 for algo in search_algorithms}
+    passed_problems = {algo: 0 for algo in search_algorithms}
+    global search_results
     for algo in search_algorithms:
         problems_not_passed_lst = []
         problems_passed_counter = 0
-        for level_num, level in enumerate(levels):
-            solution = solve_search_problem(algo, level, grid_size)
+        for level_num, level in enumerate(levels_list):
+            start_time = time.time()
+            solution, expended = solve_search_problem(algo, level, grid_size)
+            elapsed_time = time.time() - start_time
             if solution.is_goal_state():
                 problems_passed_counter += 1
             else:
                 problems_not_passed_lst.append(level_num + 1)
-        results[algo] = problems_passed_counter
-
+            search_results.loc[len(search_results)] = [grid_size, level_num + 1, elapsed_time, expended, algo]
+        passed_problems[algo] = problems_passed_counter
         print_results(algo, problems_not_passed_lst,
-                      problems_passed_counter, len(levels))
+                      problems_passed_counter, len(levels_list))
 
-solvers = {"Search": simulate_search_algorithm,
-           "SAT": simulate_sat_solver, "Q learning":
-               simulate_q_learning_solver}
+solvers = {"Search": evaluate_search_algorithm,
+           "SAT": evaluate_sat_solver, "Q learning":
+               evaluate_q_learning_solver}
 
 
-def simulate_all(grid_size, levels):
+def evaluate_all(grid_size, levels_list):
     """
-    Simulate all algorithms on the given levels.
+    Evaluate all algorithms on the given levels.
     :param grid_size: size of the grid
-    :param levels: list of levels
+    :param levels_list: list of levels
     """
     for solver_type in solvers.keys():
-            solvers.get(solver_type)(levels, grid_size)
+            solvers.get(solver_type)(levels_list, grid_size)
 
-def simulate_algorithms_for_grid_size(algorithm_type, grid_size,levels):
+def evaluate_algorithms_for_grid_size(algorithm_name, grid_size, levels_list):
     """
-    Simulate the algorithms for the given grid size.
-    :param algorithm_type: type of algorithm to simulate
+    Evaluate the algorithms for the given grid size.
+    :param algorithm_name: type of algorithm to evaluate
     :param grid_size: size of the grid
-    :param levels: list of levels
+    :param levels_list: list of levels
     """
-    if algorithm_type == "All":
-        simulate_all(grid_size,levels)
+    if algorithm_name == "All":
+        evaluate_all(grid_size, levels_list)
     else:
-        solvers.get(algorithm_type)(levels, grid_size)
+        solvers.get(algorithm_name)(levels_list, grid_size)
+
+def save_dataframe(algorithm_name):
+    convert_pd_types()
+    dataframe = None
+    # save the dataframe to a csv file
+    if algorithm_name == "SAT":
+        dataframe = sat_results
+    elif algorithm_name == "Search":
+        dataframe = search_results
+    dataframe.to_csv(f'results//{algorithm_name}_grid_10_results.csv', index=False)
+
+def convert_pd_types():
+    global sat_results, search_results
+    sat_results = sat_results.astype(
+        {'grid size': 'int64', 'level': 'int64', 'time': 'float64'})
+    search_results = search_results.astype({'grid size': 'int64', 'level': 'int64',
+                                            'time': 'float32', 'expended nodes': 'int64',
+                                            'algorithm': 'string'})
+
 
 if __name__ == "__main__":
+    algorithm_type = "Search"
     for size in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
         print("Simulating algorithms for grid size:", size)
         levels = load_levels(size)
-        algorithm_type = "Q learning"
-        simulate_algorithms_for_grid_size(algorithm_type, size, levels)
+        evaluate_algorithms_for_grid_size(algorithm_type, size, levels)
         print()
+    save_dataframe(algorithm_type)
 
 
 
