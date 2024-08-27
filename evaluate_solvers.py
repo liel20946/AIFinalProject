@@ -12,8 +12,8 @@ import time
 SAT_FAILED = "UNSAT"
 LINE_FORMAT_ERROR = "Unexpected line format"
 NUMBER_OF_LEVELS_PER_GRID_SIZE = 10
-MIN_GRID_SIZE = 10
-MAX_GRID_SIZE = 10
+MIN_GRID_SIZE = 8
+MAX_GRID_SIZE = 8
 TIMEOUT = 180
 
 sat_results = pd.DataFrame(columns=['grid size','level', 'time'])
@@ -214,6 +214,10 @@ def evaluate_algorithms_for_grid_size(algorithm_name, grid_size, levels_list):
         solvers.get(algorithm_name)(levels_list, grid_size)
 
 def save_dataframe(algorithm_name):
+    """
+    Save the results to a csv file.
+    :param algorithm_name: name of the algorithm
+    """
     convert_pd_types()
     dataframe = None
     # save the dataframe to a csv file
@@ -221,9 +225,12 @@ def save_dataframe(algorithm_name):
         dataframe = sat_results
     elif algorithm_name == "Search":
         dataframe = search_results
-    dataframe.to_csv(f'results//{algorithm_name}_grid_10_results.csv', index=False)
+    dataframe.to_csv(f'results//A_star_good_heuristic.csv', index=False)
 
 def convert_pd_types():
+    """
+    Convert the types of the dataframes.
+    """
     global sat_results, search_results
     sat_results = sat_results.astype(
         {'grid size': 'int64', 'level': 'int64', 'time': 'float64'})
