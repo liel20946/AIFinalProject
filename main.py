@@ -1,6 +1,7 @@
 import tkinter as tk
 import time
 
+from flow_game.dot import Dot
 from flow_game.flow_free_problem import FlowFreeProblem
 from problems.level_creator import create_level
 from solvers import solver
@@ -220,11 +221,42 @@ def main():
     """
     Main function to solve a level with a specific algorithm.
     """
-    algorithm = "A*"
-    grid_size = 5
-    level = 1
-    dots_list = create_level(grid_size, level)
+    algorithm = "BFS"
+    grid_size = 7
+    level = 5
+    # dots_list = create_level(grid_size, level)
+    # dots_list = [Dot(0, 0, "red", True), Dot(0, 4, "red", False),
+    #              Dot(1, 0, "blue", True), Dot(1, 4, "blue", False),
+    #              Dot(2, 0, "green", True), Dot(2, 4, "green", False),
+    #              Dot(3, 0, "yellow", True), Dot(3, 4, "yellow", False),
+    #              Dot(4, 0, "pink", True), Dot(4, 4, "pink", False),
+    #              Dot(5, 0, "purple", True), Dot(5, 4, "purple", False),
+    #              Dot(6, 0, "orange", True), Dot(6, 4, "orange", False),
+    #              Dot(0, 5, "teal", True), Dot(6, 5, "teal", False),
+    #              Dot(0, 6, "white", True), Dot(6, 6, "white", False)]
+
+    # dots_list =[Dot(6, 0, "red", True), Dot(6, 1, "red", False),
+    #             Dot(5, 2, "green", True), Dot(5, 1, "green", False),
+    #             Dot(3, 3, "blue", True), Dot(4, 2, "blue", False)]
+
+    # dots_list =[Dot(6, 0, "red", True), Dot(6, 6, "red", False),
+    #             Dot(3, 3, "green", True), Dot(6, 5, "green", False),
+    #             Dot(3, 2, "blue", True), Dot(6, 4, "blue", False)]
+
+    dots_list = [Dot(6, 6, "red", True), Dot(6, 0, "red", False),
+                 Dot(6, 5, "blue", True), Dot(6, 1, "blue", False),
+                 Dot(6, 4, "green", True), Dot(6, 2, "green", False),
+                 Dot(6, 3, "yellow", True), Dot(3, 3, "yellow", False)]
+
+
     solve_game(algorithm, grid_size, dots_list)
+    # for the 10 levels of the gridf size print for each level how many distinct colors are there
+    # for i in range(1, 11):
+    #     dots_list = create_level(grid_size, i)
+    #     colors = set()
+    #     for dot in dots_list:
+    #         colors.add(dot.get_color())
+    #     print(f"level {i} has {len(colors)} distinct colors")
 
 
 if __name__ == "__main__":

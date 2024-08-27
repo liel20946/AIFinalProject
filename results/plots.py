@@ -279,6 +279,38 @@ def create_success_rate_chart(algorithm, search_results):
 
     fig.write_image(f'{algorithm}_success_failure.png', width=800, height=600)
 
+def create_success_rate_for_all_algorithms(search_results):
+    # Define success as time <= 180
+    search_results['success'] = search_results['time'] <= 180
+
+    # Group by algorithm and calculate success and failure counts
+    success_rate = (search_results.groupby('algorithm')['success'].mean() * 100).round(0)
+    failure_rate = 100 - success_rate
+
+    # Create a DataFrame for plotting
+    plot_df = pd.DataFrame({
+        'Algorithm': success_rate.index,
+        'Success': success_rate.values,
+        'Failure': failure_rate.values
+    })
+
+    # Melt the DataFrame to have it in a long format suitable for Plotly Express
+    plot_df = plot_df.melt(id_vars=['Algorithm'], value_vars=['Success', 'Failure'],
+                           var_name='Outcome', value_name='Percentage')
+
+    # Create the horizontal bar chart with specified colors
+    colors = {'Success': 'lightgreen', 'Failure': 'lightcoral'}
+
+    fig = px.bar(plot_df, x='Percentage', y='Algorithm', color='Outcome',
+                 orientation='h', text='Percentage',
+                 title='Success Rate of Algorithms', color_discrete_map=colors)
+
+    # Center the text on the bars
+    fig.update_traces(textposition='inside')
+
+    fig.update_layout(barmode='stack', xaxis=dict(range=[0, 100]))
+    fig.write_image('All_Algorithms_Success_Rate.png')
+
 def create_line_graph(search_results, sat_results):
     # Group the search results by algorithm and grid size and calculate the mean time
     mean_times = search_results.groupby(['algorithm', 'grid size'])['time'].mean().reset_index()
@@ -350,25 +382,26 @@ def compare_heuristics():
     fig.write_image('Heuristic_Comparison.png')
     # fig.show()
 
-def compare_state_space(results):
+
+def compare_number_of_colors(results):
+    # compare the number of expended nodes for different number of colors
     fig = px.line(
         results,
-        x="level",
+        x="number of colors",
         y="expended nodes",
-        color="state space",
-        line_dash="state space",
-        title="Number of Expended Nodes in BFS: Optimized vs Non-Optimized",
-        markers=True
+        title="Number of Expended Nodes in BFS: Different Number of Colors",
+        markers=True,
+        text="expended nodes"  # Add this line to display values
     )
 
-    fig.update_traces(line=dict(width=2))
-    fig.write_image('State_Space_Comparison.png')
+    # add x, y labels
+    fig.update_xaxes(title_text="Number of Colors")
+    fig.update_yaxes(title_text="Expended Nodes")
 
+    # Increase the font size for better visibility and position text above
+    fig.update_traces(line=dict(width=2), textposition="top center", textfont=dict(size=12))
 
-
-
-
-
+    fig.write_image('Number_of_Colors_Comparison.png')
 
 
 if __name__ == "__main__":
@@ -398,14 +431,20 @@ if __name__ == "__main__":
     # compare_heuristics()
 
     # compare state space
-    base_line_results = pd.read_csv('BaseLineResults.csv')
-    compare_state_space(base_line_results)
+    # base_line_results = pd.read_csv('BaseLineResults.csv')
+    # compare_state_space(base_line_results)
+
+    # compare number of colors
+    # colors_results = pd.read_csv('number_of_colors_results.csv')
+    # compare_number_of_colors(colors_results)
 
     # success rate
     # create_success_rate_chart("BFS", search_results)
     # create_success_rate_chart("DFS", search_results)
     # create_success_rate_chart("UCS", search_results)
     # create_success_rate_chart("A*", search_results)
+    # success rate for all algorithms
+    create_success_rate_for_all_algorithms(search_results)
 
     # combined results
     # line graph
