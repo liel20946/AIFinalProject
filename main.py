@@ -221,10 +221,9 @@ def main():
     Main function to solve a level with a specific algorithm.
     """
     algorithm = "A*"
-    grid_size = 10
-    level = 10
+    grid_size = 5
+    level = 1
     dots_list = create_level(grid_size, level)
-    print(f'A* algorithm grid {grid_size} level {level}:\n')
     solve_game(algorithm, grid_size, dots_list)
 
 
