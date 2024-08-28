@@ -7,14 +7,13 @@ import plotly.express as px
 
 MAX_TIME = 180
 
-
 def load_results():
     """
     Load the results from the results.csv file.
     :return: results
     """
-    sat_results = pd.read_csv('SAT_results.csv')
-    search_results = pd.read_csv('Search_results.csv')
+    sat_results = pd.read_csv('csvs/SAT_results.csv')
+    search_results = pd.read_csv('csvs/Search_results.csv')
     return sat_results, search_results
 
 def create_single_search_algo_bar_plot(search_algo_name, total_results):
@@ -213,11 +212,21 @@ def create_sat_results_bar_plot(results):
     plt.savefig('SAT_results.png')
 
 def clip_time(results):
+    """
+    Clip the time to the maximum time.
+    :param results: results to clip
+    :return: clipped results
+    """
     # Clip the time to the maximum time
     results['time'] = results['time'].clip(upper=MAX_TIME)
     return results
 
 def create_success_rate_chart(algorithm, search_results):
+    """
+    Create a chart showing the success and failure rates for a specific algorithm.
+    :param algorithm: algorithm to filter the results
+    :param search_results: search results to use
+    """
     # Filter by the specified algorithm
     search_results = search_results[search_results['algorithm'] == algorithm]
 
@@ -280,6 +289,10 @@ def create_success_rate_chart(algorithm, search_results):
     fig.write_image(f'{algorithm}_success_failure.png', width=800, height=600)
 
 def create_success_rate_for_all_algorithms(search_results):
+    """
+    Create a horizontal bar chart showing the success rate for all algorithms.
+    :param search_results: search results to use
+    """
     # Define success as time <= 180
     search_results['success'] = search_results['time'] <= 180
 
@@ -312,6 +325,11 @@ def create_success_rate_for_all_algorithms(search_results):
     fig.write_image('All_Algorithms_Success_Rate.png')
 
 def create_line_graph(search_results, sat_results):
+    """
+    Create a line graph comparing the time taken by each algorithm and grid size.
+    :param search_results: search results
+    :param sat_results: SAT results
+    """
     # Group the search results by algorithm and grid size and calculate the mean time
     mean_times = search_results.groupby(['algorithm', 'grid size'])['time'].mean().reset_index()
 
@@ -357,9 +375,12 @@ def create_line_graph(search_results, sat_results):
     fig.write_image('All_Algorithms_Line_Graph.png')
 
 def compare_heuristics():
+    """
+    Compare the number of nodes expanded by different heuristics in the A* algorithm.
+    """
     # Read the data into DataFrames
-    df_md = pd.read_csv("A_star_md.csv")
-    df_combined = pd.read_csv("A_star_good_heuristic.csv")
+    df_md = pd.read_csv("csvs/A_star_md.csv")
+    df_combined = pd.read_csv("csvs/A_star_good_heuristic.csv")
 
     # Add a column to each DataFrame to indicate the heuristic type
     df_md['Heuristic'] = 'Manhattan Distance Heuristic'
@@ -382,8 +403,11 @@ def compare_heuristics():
     fig.write_image('Heuristic_Comparison.png')
     # fig.show()
 
-
 def compare_number_of_colors(results):
+    """
+    Compare the number of expended nodes for different number of colors.
+    :param results: results to compare
+    """
     # compare the number of expended nodes for different number of colors
     fig = px.line(
         results,
@@ -444,7 +468,7 @@ if __name__ == "__main__":
     # create_success_rate_chart("UCS", search_results)
     # create_success_rate_chart("A*", search_results)
     # success rate for all algorithms
-    create_success_rate_for_all_algorithms(search_results)
+    # create_success_rate_for_all_algorithms(search_results)
 
     # combined results
     # line graph

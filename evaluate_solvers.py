@@ -225,7 +225,7 @@ def save_dataframe(algorithm_name):
         dataframe = sat_results
     elif algorithm_name == "Search":
         dataframe = search_results
-    dataframe.to_csv(f'results//A_star_good_heuristic.csv', index=False)
+    dataframe.to_csv(f'results//{algorithm_name}_results.csv', index=False)
 
 def convert_pd_types():
     """
