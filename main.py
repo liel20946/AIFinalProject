@@ -221,10 +221,10 @@ def main():
     """
     Main function to solve a level with a specific algorithm.
     """
-    algorithm = "BFS"
-    grid_size = 7
-    level = 5
-    dots_list = create_level(level, grid_size)
+    algorithm = "SAT"
+    grid_size = 14
+    level = 2
+    dots_list = create_level(grid_size, level)
     solve_game(algorithm, grid_size, dots_list)
 
 
