@@ -58,7 +58,7 @@ def count_same_color_neighbor(i,j, color, board):
     return count
 
 
-# a bad cell is a colord cell in which it has more that 2 neighbors of
+# a bad cell is a colord cell in which it has more than 2 neighbors of
 # its own color. this is a bad cell because it will block the path
 def count_bad_cells(board):
     bad_cells = 0

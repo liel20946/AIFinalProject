@@ -1,7 +1,6 @@
 import tkinter as tk
 import time
 
-from flow_game.dot import Dot
 from flow_game.flow_free_problem import FlowFreeProblem
 from problems.level_creator import create_level
 from solvers import solver
@@ -222,8 +221,8 @@ def main():
     Main function to solve a level with a specific algorithm.
     """
     algorithm = "SAT"
-    grid_size = 14
-    level = 2
+    grid_size = 5
+    level = 11
     dots_list = create_level(grid_size, level)
     solve_game(algorithm, grid_size, dots_list)
 

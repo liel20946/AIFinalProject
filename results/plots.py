@@ -316,7 +316,7 @@ def create_success_rate_for_all_algorithms(search_results):
 
     fig = px.bar(plot_df, x='Percentage', y='Algorithm', color='Outcome',
                  orientation='h', text='Percentage',
-                 title='Success Rate of Algorithms', color_discrete_map=colors)
+                 title='Success Rate of Algorithms on Grid Sizes 5-10', color_discrete_map=colors)
 
     # Center the text on the bars
     fig.update_traces(textposition='inside')

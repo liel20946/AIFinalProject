@@ -57,8 +57,8 @@ def round_color(rgb_color, round_to=10):
 def create_level(grid_size, level_number):
     """
     Convert an image to a list of Dot objects.
-    :param image_path: path to the image
     :param grid_size: size of the grid
+    :param level_number: number of the level
     :return: list of Dot objects
     """
     # Load the image

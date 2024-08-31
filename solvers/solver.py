@@ -76,7 +76,7 @@ def null_heuristic(state):
     """
     return 0
 
-
+# A* search
 def a_star_search(problem, heuristic=null_heuristic):
     """
     run the A* search algorithm on the given problem.
