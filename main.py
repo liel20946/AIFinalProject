@@ -221,7 +221,7 @@ def main():
     """
     Main function to solve a level with a specific algorithm.
     """
-    algorithm = "Q learning"
+    algorithm = "SAT"
     grid_size = 5
     level = 5
     dots_list = create_level(grid_size, level)

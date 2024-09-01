@@ -10,8 +10,6 @@ import time
 SAT_FAILED = "UNSAT"
 LINE_FORMAT_ERROR = "Unexpected line format"
 NUMBER_OF_LEVELS_PER_GRID_SIZE = 10
-MIN_GRID_SIZE = 5
-MAX_GRID_SIZE = 5
 TIMEOUT = 180
 
 sat_results = pd.DataFrame(columns=['grid size','level', 'time'])
@@ -212,7 +210,9 @@ def convert_pd_types():
 
 if __name__ == "__main__":
     algorithm_type = "Search"
-    for size in range(MIN_GRID_SIZE, MAX_GRID_SIZE + 1):
+    min_grid_size = 5
+    max_grid_size = 5
+    for size in range(min_grid_size, max_grid_size + 1):
         print("Simulating algorithms for grid size:", size)
         levels = load_levels(size)
         evaluate_algorithms_for_grid_size(algorithm_type, size, levels)
