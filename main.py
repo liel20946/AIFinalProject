@@ -104,9 +104,10 @@ def solve_with_rl(algorithm_name, problem, dots_list):
     agent.train(episodes=10000, environment=environment)
     # Solve a specific level
     initial_state = environment.reset()
+    start_time = time.time()
     actions = agent.solve(initial_state, environment)
-
-    display_gui(problem, algorithm_name, actions, 0)
+    elapsed_time = time.time() - start_time
+    display_gui(problem, algorithm_name, actions, elapsed_time)
 
 
 def convert_dots_to_sat_problem(dots):
@@ -220,9 +221,9 @@ def main():
     """
     Main function to solve a level with a specific algorithm.
     """
-    algorithm = "SAT"
+    algorithm = "Q learning"
     grid_size = 5
-    level = 11
+    level = 5
     dots_list = create_level(grid_size, level)
     solve_game(algorithm, grid_size, dots_list)
 

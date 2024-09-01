@@ -2,18 +2,16 @@ from flow_game.flow_free_problem import FlowFreeProblem
 from main import run_search_algorithm
 from main import convert_dots_to_sat_problem
 from solvers.SAT import FlowFreeSAT
-from main import choose_rl_agent
 from problems.level_creator import create_level
 import signal
-from solvers.flow_free_env import FlowFreeEnvironment
 import pandas as pd
 import time
 
 SAT_FAILED = "UNSAT"
 LINE_FORMAT_ERROR = "Unexpected line format"
 NUMBER_OF_LEVELS_PER_GRID_SIZE = 10
-MIN_GRID_SIZE = 8
-MAX_GRID_SIZE = 8
+MIN_GRID_SIZE = 5
+MAX_GRID_SIZE = 5
 TIMEOUT = 180
 
 sat_results = pd.DataFrame(columns=['grid size','level', 'time'])
@@ -117,34 +115,6 @@ def evaluate_sat_solver(levels_list, grid_size):
     print_results("SAT", problems_not_passed_lst, num_of_passed_problems, len(levels_list))
 
 
-def evaluate_q_learning_solver(levels_list, grid_size):
-    """
-    Evaluate the Q learning solver on the given levels.
-    :param levels_list: list of levels
-    :param grid_size: size of the grid
-    """
-    q_algorithms = ["Q learning", "AQ learning"]
-    for algo in q_algorithms:
-        problems_not_passed_lst = []
-        problems_passed_counter = 0
-        for level_num, level in enumerate(levels_list):
-            problem = FlowFreeProblem(grid_size, level)
-            environment = FlowFreeEnvironment(problem)
-            agent = choose_rl_agent(algo)
-            agent.train(episodes=5000, environment=environment)
-            initial_state = environment.reset()
-            actions = agent.solve(initial_state, environment)
-            problem_state = problem.get_start_state()
-            for action in actions:
-                problem_state = problem_state.do_move(action)
-            if problem_state.is_goal_state():
-                problems_passed_counter += 1
-            else:
-                problems_not_passed_lst.append(level_num + 1)
-
-        print_results(algo, problems_not_passed_lst, problems_passed_counter, len(levels_list))
-
-
 def solve_search_problem(algo, problem_dots, grid_size):
     """
     Solve the search problem using the given algorithm.
@@ -188,8 +158,7 @@ def evaluate_search_algorithm(levels_list, grid_size):
                       problems_passed_counter, len(levels_list))
 
 solvers = {"Search": evaluate_search_algorithm,
-           "SAT": evaluate_sat_solver, "Q learning":
-               evaluate_q_learning_solver}
+           "SAT": evaluate_sat_solver}
 
 
 def evaluate_all(grid_size, levels_list):
@@ -219,13 +188,15 @@ def save_dataframe(algorithm_name):
     :param algorithm_name: name of the algorithm
     """
     convert_pd_types()
-    dataframe = None
+    dataframes = []
     # save the dataframe to a csv file
-    if algorithm_name == "SAT":
-        dataframe = sat_results
-    elif algorithm_name == "Search":
-        dataframe = search_results
-    dataframe.to_csv(f'results//{algorithm_name}_results.csv', index=False)
+    if algorithm_name == "SAT" or algorithm_name == "All":
+        dataframes.append((sat_results, 'SAT'))
+    if algorithm_name == "Search" or algorithm_name == "All":
+        dataframes.append((search_results, 'Search'))
+    for dataframe, algorithm_name in dataframes:
+        dataframe.to_csv(f'results//{algorithm_name}_results.csv', index=False)
+
 
 def convert_pd_types():
     """

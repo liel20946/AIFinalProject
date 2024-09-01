@@ -428,9 +428,64 @@ def compare_number_of_colors(results):
     fig.write_image('Number_of_Colors_Comparison.png')
 
 
+def line_graph_success(search_results, sat_results):
+    """
+    Create a line graph showing the success rate by grid size for each algorithm.
+
+    :param search_results: DataFrame containing search results (with columns 'grid size', 'level', 'time', 'algorithm').
+    :param sat_results: DataFrame containing SAT results (with columns 'grid size', 'level', 'time').
+    """
+    # Merge both datasets into one DataFrame
+    sat_results['algorithm'] = 'SAT'
+    search_results['algorithm'] = search_results['algorithm'].replace('BFS', 'BFS (Baseline)')
+    merged_results = pd.concat(
+        [search_results[['grid size', 'level', 'time', 'algorithm']], sat_results], axis=0)
+
+    # Calculate success (1 if time <= 180, else 0)
+    merged_results['success'] = (merged_results['time'] < 180).astype(int)
+
+    # Group by grid size and algorithm and calculate the success rate
+    success_rate = merged_results.groupby(['grid size', 'algorithm'])['success'].mean().reset_index()
+    success_rate['success'] = success_rate['success'] * 100  # Convert to percentage
+
+    # Create the line graph
+    fig = px.line(
+        success_rate,
+        x='grid size',
+        y='success',
+        color='algorithm',
+        line_dash='algorithm',
+        markers=True,
+        title='Success Rate by Grid Size and Algorithm'
+    )
+
+    # Update the layout
+    fig.update_layout(
+        title={
+            'x': 0.5,
+            'y': 0.95,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'pad': {'b': 10}
+        },
+        margin=dict(t=80, l=0, r=0, b=60),
+        legend_title_text='Algorithm'
+    )
+
+    # Label x, y axes and ensure the graph starts from 5 and ends at 14
+    fig.update_xaxes(title_text='Grid Size', tickvals=list(range(5, 15)), range=[5, 14])
+    fig.update_yaxes(title_text='Success Rate (%)', range=[-5, 105])  # Extend the Y-axis below 0 and above 100
+
+    # Save the line graph
+    fig.write_image('Success_Rate_Line_Graph.png')
+
+    # Show the graph
+    fig.show()
+
+
 if __name__ == "__main__":
     sat_results, search_results = load_results()
-    # search_results = clip_time(search_results)
+    search_results = clip_time(search_results)
 
     # SAT results
     # create_sat_results_bar_plot(sat_results)
@@ -444,7 +499,7 @@ if __name__ == "__main__":
     # create_single_search_algo_bar_plot("A*", search_results)
 
     # expended nodes
-    # create_expended_nodes_bar_plot("BFS", search_results)
+    create_expended_nodes_bar_plot("BFS", search_results)
     # create_expended_nodes_bar_plot("DFS", search_results)
     # create_expended_nodes_bar_plot("UCS", search_results)
     # create_expended_nodes_bar_plot("A*", search_results)
@@ -472,9 +527,11 @@ if __name__ == "__main__":
 
     # combined results
     # line graph
-    # search_results_updated = pd.read_csv('Search_results_base_and_a_star.csv')
+    # search_results_updated = pd.read_csv('csvs//Search_results_base_and_a_star.csv')
     # search_results_updated = clip_time(search_results_updated)
     # create_line_graph(search_results_updated, sat_results)
+    # search_results_for_line_graph = pd.read_csv('csvs/full_results_for_succ.csv')
+    # line_graph_success(search_results_for_line_graph, sat_results)
 
 
 
