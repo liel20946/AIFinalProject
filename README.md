@@ -1,5 +1,8 @@
 # AIFinalProject
 
+<img src="img1.png" alt="Description of image" width="450" height="250">
+
+
 # Flow Free Solver Project
 
 This project implements a solver for the game **Flow Free**, along with tools to evaluate the solver's performance and generate analytical plots. The solver can be run with a graphical user interface (GUI) to visualize the solutions, and the evaluation scripts provide insights into the efficiency and accuracy of different solvers.
