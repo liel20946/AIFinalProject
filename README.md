@@ -15,14 +15,17 @@ This project implements a solver for the game **Flow Free**, along with tools to
 
 ## How to Run the Project
 
-### 1. Running the Main Solver
-before running the main solver, you need to install the required libraries by running the following command:
+### 0. Prerequisites
+Before running the main solver, you need to install the required libraries by running the following command:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-than you can run the main solver. you can choose the algorithm, grid size and the level you want 
+**note that we worked on python version 3.1.2 on mac OS.**
+
+### 1. Running the Main Solver
+Now you can run the main solver. you can choose the algorithm, grid size and the level you want 
 by changing the following variables in the main.py file:
 
 ```python
