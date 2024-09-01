@@ -1,6 +1,6 @@
 # AIFinalProject
 
-<img src="img1.png" alt="Description of image" width="450" height="250">
+<img src="readme_img.png" alt="Description of image" width="450" height="250">
 
 
 # Flow Free Solver Project
